@@ -1534,7 +1534,7 @@ void SendDashboardData()
     ArrayResize(post, StringLen(json));
     StringToCharArray(json, post, 0, StringLen(json));
     
-    int res = WebRequest("POST", DashboardSyncURL, NULL, NULL, 1500, post, ArraySize(post), result, result_headers);
+    int res = WebRequest("POST", DashboardSyncURL, "Content-Type: application/json\r\n", 1500, post, result, result_headers);
     if(res == -1)
     {
         Print("Dashboard Sync Error code: ", GetLastError());

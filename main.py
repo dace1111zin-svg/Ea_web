@@ -16,6 +16,7 @@ import os
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 import pymongo
+import certifi
 
 # Configure logging
 logging.basicConfig(
@@ -52,7 +53,7 @@ MONGO_CONNECTED = False
 def initialize_mongodb():
     global mongo_client, db, collection, MONGO_CONNECTED
     try:
-        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
         # Check connection status
         mongo_client.server_info()
         db = mongo_client["mt5_dashboard"]
@@ -427,7 +428,7 @@ def api_status():
 def api_update():
     global dashboard_state
     try:
-        data = flask.request.get_json()
+        data = flask.request.get_json(force=True)
         if not data:
             return jsonify({"error": "No data provided"}), 400
             
