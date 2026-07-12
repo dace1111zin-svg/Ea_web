@@ -10,6 +10,7 @@
 <title>MT5 Account Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Lora:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root{
     --bg:#F7F3E7;
@@ -68,8 +69,8 @@
   .sidebar-nav h3{ font-family:'IBM Plex Mono', monospace; font-size:0.66rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
   .sidebar-nav a{ display:flex; align-items:center; gap:12px; padding:11px 10px; border-radius:12px; text-decoration:none; color:var(--ink); font-size:0.9rem; font-weight:700; transition:background .15s ease; }
   .sidebar-nav a:hover{ background:var(--panel-2); }
-  .sidebar-nav a .ic{ width:8px; height:8px; border-radius:50%; border:2px solid var(--ink); }
-  .sidebar-nav a.active .ic{ background:var(--orange); border-color:var(--orange); }
+  .sidebar-nav a .ic, .drawer a .ic{ width:24px; text-align:center; font-size:1.05rem; color:var(--ink); margin-right:8px; transition:all 0.15s ease; }
+  .sidebar-nav a.active .ic, .drawer a.active .ic{ color:var(--orange); }
   .sidebar-nav a.active{ background:var(--orange-dim); }
   .sidebar-clock{ margin-top:auto; font-size:0.78rem; color:var(--muted); font-weight:700; }
 
@@ -105,7 +106,7 @@
     text-decoration:none; color:var(--muted); font-size:0.62rem; font-weight:700;
     padding:6px 10px; border-radius:12px; min-width:60px;
   }
-  .bottom-nav a .bn-ic{ font-size:1.05rem; color:var(--muted); }
+  .bottom-nav a .bn-ic{ font-size:1.15rem; color:var(--muted); transition:all 0.15s ease; margin-bottom:2px; }
   .bottom-nav a.active{ color:var(--orange); }
   .bottom-nav a.active .bn-ic{ color:var(--orange); }
 
@@ -145,8 +146,7 @@
   .drawer h3{ font-family:'IBM Plex Mono', monospace; font-size:0.68rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
   .drawer a{ display:flex; align-items:center; gap:12px; padding:12px 10px; border-radius:12px; text-decoration:none; color:var(--ink); font-size:0.92rem; font-weight:700; transition:background .15s ease; }
   .drawer a:hover{ background:var(--panel-2); }
-  .drawer a .ic{ width:8px; height:8px; border-radius:50%; border:2px solid var(--ink); }
-  .drawer a.active .ic{ background:var(--orange); border-color:var(--orange); }
+  /* Drawer icons styled together with sidebar-nav icons */
   .drawer-close{ align-self:flex-end; background:none; border:none; color:var(--ink); font-size:1.6rem; cursor:pointer; margin-bottom:8px; font-weight:700; }
 
   main{ max-width:1180px; margin:0 auto; padding:32px 20px 70px; }
@@ -291,14 +291,14 @@
     <button id="refreshBtnSidebar" style="margin-top:10px; border:2px solid var(--ink); background:var(--panel); border-radius:12px; padding:9px 12px; font-weight:700; font-size:0.8rem; cursor:pointer; text-align:left;">&#8635; Refresh data</button>
     <nav class="sidebar-nav">
       <h3>Navigate</h3>
-      <a href="#" class="active" data-nav="overview"><span class="ic"></span>Overview</a>
-      <a href="#positionsPanel" data-nav="positions"><span class="ic"></span>Open Positions</a>
-      <a href="#ordersPanel" data-nav="history"><span class="ic"></span>Order History</a>
-      <a href="#watchPanel" data-nav="watch"><span class="ic"></span>Watchlist</a>
+      <a href="#" class="active" data-nav="overview"><i class="fa-solid fa-table-columns ic"></i>Overview</a>
+      <a href="#positionsPanel" data-nav="positions"><i class="fa-solid fa-arrow-trend-up ic"></i>Open Positions</a>
+      <a href="#ordersPanel" data-nav="history"><i class="fa-solid fa-clock-rotate-left ic"></i>Order History</a>
+      <a href="#watchPanel" data-nav="watch"><i class="fa-solid fa-binoculars ic"></i>Watchlist</a>
       <h3 style="margin-top:22px;">Bridge</h3>
-      <a href="#" id="reconnectLinkSidebar"><span class="ic"></span>Reconnect</a>
+      <a href="#" id="reconnectLinkSidebar"><i class="fa-solid fa-rotate ic"></i>Reconnect</a>
       <h3 style="margin-top:22px;">Settings</h3>
-      <a href="#" data-nav="admin"><span class="ic"></span>Admin Panel</a>
+      <a href="#" data-nav="admin"><i class="fa-solid fa-user-gear ic"></i>Admin Panel</a>
     </nav>
     <div class="sidebar-clock mono" id="clockSidebar">--:--:--</div>
   </aside>
@@ -319,14 +319,14 @@
     <nav class="drawer" id="drawer">
       <button class="drawer-close" id="drawerClose">&times;</button>
       <h3>Navigate</h3>
-      <a href="#" class="active" data-nav="overview"><span class="ic"></span>Overview</a>
-      <a href="#positionsPanel" data-nav="positions"><span class="ic"></span>Open Positions</a>
-      <a href="#ordersPanel" data-nav="history"><span class="ic"></span>Order History</a>
-      <a href="#watchPanel" data-nav="watch"><span class="ic"></span>Watchlist</a>
+      <a href="#" class="active" data-nav="overview"><i class="fa-solid fa-table-columns ic"></i>Overview</a>
+      <a href="#positionsPanel" data-nav="positions"><i class="fa-solid fa-arrow-trend-up ic"></i>Open Positions</a>
+      <a href="#ordersPanel" data-nav="history"><i class="fa-solid fa-clock-rotate-left ic"></i>Order History</a>
+      <a href="#watchPanel" data-nav="watch"><i class="fa-solid fa-binoculars ic"></i>Watchlist</a>
       <h3 style="margin-top:22px;">Bridge</h3>
-      <a href="#" id="reconnectLink"><span class="ic"></span>Reconnect</a>
+      <a href="#" id="reconnectLink"><i class="fa-solid fa-rotate ic"></i>Reconnect</a>
       <h3 style="margin-top:22px;">Settings</h3>
-      <a href="#" data-nav="admin"><span class="ic"></span>Admin Panel</a>
+      <a href="#" data-nav="admin"><i class="fa-solid fa-user-gear ic"></i>Admin Panel</a>
     </nav>
 
     <main>
@@ -473,7 +473,7 @@
           <div class="eyebrow" style="margin-bottom:0;" id="ordersLabel">Order History — Day</div>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <div class="search-box">
-              <span>&#128269;</span>
+              <i class="fa-solid fa-magnifying-glass"></i>
               <input type="text" id="searchInput" placeholder="Filter by symbol…">
             </div>
             <button id="exportCsvBtn" title="Export CSV"
@@ -516,16 +516,16 @@
     <!-- Bottom tab bar: shown on phone widths -->
     <nav class="bottom-nav">
       <a href="#" class="active" data-nav="overview">
-        <span class="bn-ic">●</span><span class="bn-label">Overview</span>
+        <i class="fa-solid fa-table-columns bn-ic"></i><span class="bn-label">Overview</span>
       </a>
       <a href="#positionsPanel" data-nav="positions">
-        <span class="bn-ic">◆</span><span class="bn-label">Positions</span>
+        <i class="fa-solid fa-arrow-trend-up bn-ic"></i><span class="bn-label">Positions</span>
       </a>
       <a href="#ordersPanel" data-nav="history">
-        <span class="bn-ic">▤</span><span class="bn-label">History</span>
+        <i class="fa-solid fa-clock-rotate-left bn-ic"></i><span class="bn-label">History</span>
       </a>
       <a href="#watchPanel" data-nav="watch">
-        <span class="bn-ic">★</span><span class="bn-label">Watch</span>
+        <i class="fa-solid fa-binoculars bn-ic"></i><span class="bn-label">Watch</span>
       </a>
     </nav>
   </div>
