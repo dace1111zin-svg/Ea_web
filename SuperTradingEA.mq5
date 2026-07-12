@@ -31,7 +31,7 @@ enum ENUM_SESSION_MODE {
 // ==================================================================
 // License Protection System
 // ==================================================================
-int Allowed_Accounts[] = { 263278853, 263426504, 413789211 ,413789211,415868928 }; 
+int Allowed_Accounts[] = { 415868928 }; 
 datetime Allowed_ExpiryDate = D'2026.12.31 23:59'; 
 const int HybridStartStepLayer = 7;     
 
