@@ -219,6 +219,32 @@
 
   footer.page-footer{ text-align:center; color:var(--muted-2); font-size:0.74rem; margin-top:22px; font-weight:600; }
   footer.page-footer span{ color:var(--muted); }
+
+  /* Responsive table wrapper to prevent page stretching on mobile */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile styling optimizations */
+  @media (max-width: 480px) {
+    .panel {
+      padding: 16px 16px;
+      border-radius: var(--radius-sm);
+    }
+    main {
+      padding: 16px 12px 90px;
+    }
+    .account-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .account-name {
+      text-align: left;
+    }
+  }
 </style>
 </head>
 <body>
@@ -332,10 +358,12 @@
 
       <section class="panel" id="positionsPanel">
         <div class="eyebrow">Open Positions</div>
-        <table>
-          <thead><tr><th>Symbol</th><th>Side</th><th>Vol</th><th>Open</th><th>Current</th><th>Floating P/L</th></tr></thead>
-          <tbody id="positionsBody"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
-        </table>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th>Symbol</th><th>Side</th><th>Vol</th><th>Open</th><th>Current</th><th>Floating P/L</th></tr></thead>
+            <tbody id="positionsBody"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="panel" id="ordersPanel">
@@ -352,10 +380,12 @@
             </button>
           </div>
         </div>
-        <table>
-          <thead><tr><th>#</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th data-sort="profit">Profit &#8597;</th><th data-sort="time">Time &#8597;</th></tr></thead>
-          <tbody id="ordersBody"><tr class="empty-row"><td colspan="7">Loading…</td></tr></tbody>
-        </table>
+        <div class="table-responsive">
+          <table>
+            <thead><tr><th>#</th><th>Symbol</th><th>Side</th><th>Vol</th><th>Price</th><th data-sort="profit">Profit &#8597;</th><th data-sort="time">Time &#8597;</th></tr></thead>
+            <tbody id="ordersBody"><tr class="empty-row"><td colspan="7">Loading…</td></tr></tbody>
+          </table>
+        </div>
         <div class="orders-footer">
           <span id="ordersCount">0 trades</span>
           <span id="ordersNet">Net: $0.00</span>
