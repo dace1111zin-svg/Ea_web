@@ -331,7 +331,7 @@
   <div class="layout">
     <div class="col">
 
-      <section class="panel">
+      <section class="panel" data-view="overview">
         <div class="eyebrow">Account</div>
         <div class="account-row">
           <div class="account-left">
@@ -359,7 +359,7 @@
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel" data-view="overview">
         <div class="eyebrow" id="targetEyebrow">Progress to $2,000 Target</div>
         <div class="target-grid">
           <div class="gauge-box">
@@ -390,7 +390,7 @@
         </div>
       </section>
 
-      <section class="panel" id="positionsPanel">
+      <section class="panel" id="positionsPanel" data-view="positions">
         <div class="eyebrow">Open Positions</div>
         <div class="table-responsive">
           <table>
@@ -400,7 +400,7 @@
         </div>
       </section>
 
-      <section class="panel" id="ordersPanel">
+      <section class="panel" id="ordersPanel" data-view="history">
         <div class="orders-head">
           <div class="eyebrow" style="margin-bottom:0;" id="ordersLabel">Order History — Day</div>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -428,12 +428,12 @@
     </div>
 
     <div class="col">
-      <section class="panel" id="watchPanel">
+      <section class="panel" id="watchPanel" data-view="watch">
         <div class="eyebrow">Watchlist</div>
         <div id="watchBody"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel" data-view="overview">
         <div class="eyebrow">Session Summary</div>
         <div style="display:flex; flex-direction:column; gap:12px; font-size:0.86rem; font-weight:600;">
           <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Open positions</span><span class="mono" id="summaryOpenCount">0</span></div>
@@ -524,9 +524,36 @@ overlay.addEventListener("click", closeDrawer);
 document.getElementById("reconnectLink").addEventListener("click", (e)=>{ e.preventDefault(); closeDrawer(); init(); });
 document.getElementById("reconnectLinkSidebar").addEventListener("click", (e)=>{ e.preventDefault(); init(); });
 
-/* Keep sidebar / bottom-nav / drawer active states in sync and handle smooth scrolling with header offset */
+function showSection(viewVal) {
+  const isMobile = window.innerWidth < 1024;
+  if (isMobile) {
+    document.querySelectorAll("section[data-view]").forEach(panel => {
+      if (panel.getAttribute("data-view") === viewVal) {
+        panel.style.display = "block";
+      } else {
+        panel.style.display = "none";
+      }
+    });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  } else {
+    // Show all on desktop
+    document.querySelectorAll("section[data-view]").forEach(panel => {
+      panel.style.display = "block";
+    });
+  }
+}
+
+// Watch window resize to handle grid layouts cleanly
+window.addEventListener("resize", () => {
+  const activeNav = document.querySelector(".bottom-nav a.active") || document.querySelector(".sidebar-nav a.active");
+  const navVal = activeNav ? activeNav.getAttribute("data-nav") : "overview";
+  showSection(navVal);
+});
+
+/* Keep sidebar / bottom-nav / drawer active states in sync and handle smooth scrolling / view switching */
 document.querySelectorAll(".sidebar-nav a[data-nav], .bottom-nav a[data-nav], .drawer a[data-nav]").forEach(link=>{
   link.addEventListener("click", (e)=>{
+    e.preventDefault();
     const navVal = link.getAttribute("data-nav");
     
     // Update active class in all navigation elements
@@ -538,31 +565,8 @@ document.querySelectorAll(".sidebar-nav a[data-nav], .bottom-nav a[data-nav], .d
       }
     });
     
-    const targetId = link.getAttribute("href");
-    if (targetId && targetId.startsWith("#") && targetId.length > 1) {
-      e.preventDefault();
-      const targetEl = document.querySelector(targetId);
-      if (targetEl) {
-        closeDrawer();
-        
-        // Account for sticky header height (around 70px) and page spacing
-        const headerOffset = 80;
-        const elementPosition = targetEl.getBoundingClientRect().top + window.pageYOffset;
-        const offsetPosition = elementPosition - headerOffset;
-        
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
-        });
-      }
-    } else if (targetId === "#") {
-      e.preventDefault();
-      closeDrawer();
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    }
+    closeDrawer();
+    showSection(navVal);
   });
 });
 
@@ -818,6 +822,11 @@ async function init(){
   await loadProfitTotals();
   await loadPositions();
   await loadWatchlist();
+  
+  // Apply initial view switching
+  const activeNav = document.querySelector(".bottom-nav a.active") || document.querySelector(".sidebar-nav a.active");
+  const navVal = activeNav ? activeNav.getAttribute("data-nav") : "overview";
+  showSection(navVal);
 }
 init();
 </script>
