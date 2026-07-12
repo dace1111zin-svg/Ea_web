@@ -244,6 +244,24 @@
     .account-name {
       text-align: left;
     }
+    header {
+      padding: 12px 14px;
+    }
+    .logo {
+      font-size: 0.95rem;
+    }
+    .logo .mark {
+      width: 28px;
+      height: 28px;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .live-pill {
+      padding: 4px 10px 4px 8px;
+      font-size: 0.62rem;
+    }
+    .header-right {
+      gap: 6px;
+    }
   }
 </style>
 </head>
@@ -283,10 +301,10 @@
     <nav class="drawer" id="drawer">
       <button class="drawer-close" id="drawerClose">&times;</button>
       <h3>Navigate</h3>
-      <a href="#" class="active"><span class="ic"></span>Overview</a>
-      <a href="#positionsPanel"><span class="ic"></span>Open Positions</a>
-      <a href="#ordersPanel"><span class="ic"></span>Order History</a>
-      <a href="#watchPanel"><span class="ic"></span>Watchlist</a>
+      <a href="#" class="active" data-nav="overview"><span class="ic"></span>Overview</a>
+      <a href="#positionsPanel" data-nav="positions"><span class="ic"></span>Open Positions</a>
+      <a href="#ordersPanel" data-nav="history"><span class="ic"></span>Order History</a>
+      <a href="#watchPanel" data-nav="watch"><span class="ic"></span>Watchlist</a>
       <h3 style="margin-top:22px;">Bridge</h3>
       <a href="#" id="reconnectLink"><span class="ic"></span>Reconnect</a>
     </nav>
@@ -490,12 +508,45 @@ overlay.addEventListener("click", closeDrawer);
 document.getElementById("reconnectLink").addEventListener("click", (e)=>{ e.preventDefault(); closeDrawer(); init(); });
 document.getElementById("reconnectLinkSidebar").addEventListener("click", (e)=>{ e.preventDefault(); init(); });
 
-/* Keep sidebar / bottom-nav active states in sync when tapped */
-document.querySelectorAll(".sidebar-nav a[data-nav], .bottom-nav a[data-nav]").forEach(link=>{
-  link.addEventListener("click", ()=>{
-    const group = link.closest(".sidebar-nav, .bottom-nav");
-    group.querySelectorAll("a").forEach(a=>a.classList.remove("active"));
-    link.classList.add("active");
+/* Keep sidebar / bottom-nav / drawer active states in sync and handle smooth scrolling with header offset */
+document.querySelectorAll(".sidebar-nav a[data-nav], .bottom-nav a[data-nav], .drawer a[data-nav]").forEach(link=>{
+  link.addEventListener("click", (e)=>{
+    const navVal = link.getAttribute("data-nav");
+    
+    // Update active class in all navigation elements
+    document.querySelectorAll("a[data-nav]").forEach(a=>{
+      if(a.getAttribute("data-nav") === navVal) {
+        a.classList.add("active");
+      } else {
+        a.classList.remove("active");
+      }
+    });
+    
+    const targetId = link.getAttribute("href");
+    if (targetId && targetId.startsWith("#") && targetId.length > 1) {
+      e.preventDefault();
+      const targetEl = document.querySelector(targetId);
+      if (targetEl) {
+        closeDrawer();
+        
+        // Account for sticky header height (around 70px) and page spacing
+        const headerOffset = 80;
+        const elementPosition = targetEl.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - headerOffset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
+    } else if (targetId === "#") {
+      e.preventDefault();
+      closeDrawer();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
   });
 });
 
