@@ -400,7 +400,7 @@
 </div>
 
 <script>
-let API_BASE = localStorage.getItem("mt5_api_base") || "http://localhost:5000/api";
+let API_BASE = localStorage.getItem("mt5_api_base") || (window.location.origin + "/api");
 let TARGET_USD = parseFloat(localStorage.getItem("mt5_target")) || 2000;
 let currentPeriod = "day";
 document.addEventListener("DOMContentLoaded", ()=>{
@@ -661,7 +661,7 @@ async function loadAccount(){
     usingMockData = true; setLive(false);
     renderAccount(mockAccount);
     renderSparkline(mockEquityCurve);
-    showBanner("Bridge not reachable at localhost:5000 — showing demo data. Run bridge_server.py on your MT5 PC to see live data.");
+    showBanner("Bridge not reachable at " + API_BASE.replace(/^https?:\/\//, "") + " — showing demo data. Make sure your MT5 EA is pushing updates.");
   }
 }
 async function loadOrders(period){
