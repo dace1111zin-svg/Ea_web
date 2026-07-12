@@ -279,6 +279,13 @@
       gap: 6px;
     }
   }
+
+  @media (max-width: 767px) {
+    .admin-grid {
+      grid-template-columns: 1fr !important;
+      gap: 24px !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -357,29 +364,74 @@
           <div style="font-family:'Archivo Black', sans-serif; font-size:1.3rem; margin-bottom:8px;">Control Room</div>
           <p style="color:var(--muted); font-size:0.86rem; margin-bottom:24px; font-weight:600;">Settings are saved in MongoDB and synced globally.</p>
           
-          <div style="display:flex; flex-direction:column; gap:20px; max-width:480px; margin-bottom:28px;">
-            <!-- Target USD -->
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:var(--muted);">Profit Target (USD)</label>
-              <input type="number" id="settingTargetInput" placeholder="e.g. 2000" 
-                     style="border:2px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.95rem; font-weight:700; outline:none; background:var(--panel-2);">
-            </div>
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; align-items: start; margin-bottom: 28px;" class="admin-grid">
             
-            <!-- Mock Mode Toggle -->
-            <div style="display:flex; align-items:center; justify-content:space-between; border:2px dashed var(--line); border-radius:14px; padding:14px 18px; background:var(--panel-2);">
-              <div style="flex:1; padding-right:12px;">
-                <div style="font-size:0.86rem; font-weight:800;">Simulated Demo Mode</div>
-                <div style="font-size:0.7rem; color:var(--muted); font-weight:600; margin-top:2px;">Override live MT5 data with sandbox statistics.</div>
+            <!-- Left Side: Inputs -->
+            <div style="display:flex; flex-direction:column; gap:20px;">
+              <!-- Target USD -->
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:var(--muted);">Profit Target (USD)</label>
+                <input type="number" id="settingTargetInput" placeholder="e.g. 2000" 
+                       style="border:2px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.95rem; font-weight:700; outline:none; background:var(--panel-2);">
               </div>
-              <input type="checkbox" id="settingMockToggle" style="width:20px; height:20px; cursor:pointer; accent-color:var(--orange);">
+              
+              <!-- Mock Mode Toggle -->
+              <div style="display:flex; align-items:center; justify-content:space-between; border:2px dashed var(--line); border-radius:14px; padding:14px 18px; background:var(--panel-2);">
+                <div style="flex:1; padding-right:12px;">
+                  <div style="font-size:0.86rem; font-weight:800;">Simulated Demo Mode</div>
+                  <div style="font-size:0.7rem; color:var(--muted); font-weight:600; margin-top:2px;">Override live MT5 data with sandbox statistics.</div>
+                </div>
+                <input type="checkbox" id="settingMockToggle" style="width:20px; height:20px; cursor:pointer; accent-color:var(--orange);">
+              </div>
+              
+              <!-- Allowed Accounts -->
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:var(--muted);">Allowed MT5 Account IDs (comma separated)</label>
+                <input type="text" id="settingAccountsInput" placeholder="e.g. 415868928, 12345678" 
+                       style="border:2px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.95rem; font-weight:700; outline:none; background:var(--panel-2);">
+              </div>
             </div>
             
-            <!-- Allowed Accounts -->
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:var(--muted);">Allowed MT5 Account IDs (comma separated)</label>
-              <input type="text" id="settingAccountsInput" placeholder="e.g. 415868928, 12345678" 
-                     style="border:2px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.95rem; font-weight:700; outline:none; background:var(--panel-2);">
+            <!-- Right Side: Live Preview Box -->
+            <div style="background:var(--panel-2); border:2px solid var(--line); border-radius:16px; padding:20px; box-shadow:var(--shadow-sm);">
+              <div style="font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--muted); letter-spacing:1px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-eye" style="color:var(--orange);"></i> Widget Live Preview
+              </div>
+              
+              <!-- Mock Target Gauge -->
+              <div style="display:flex; flex-direction:column; align-items:center; gap:8px; border-bottom:2px dashed rgba(21,19,15,0.12); padding-bottom:16px; margin-bottom:16px;">
+                <div style="position:relative; width:130px; height:130px;">
+                  <svg viewBox="0 0 200 200" width="130" height="130">
+                    <circle cx="100" cy="100" r="82" fill="none" stroke="#EDE7D4" stroke-width="16"/>
+                    <circle id="previewGaugeArc" cx="100" cy="100" r="82" fill="none" stroke="#F1601C" stroke-width="16"
+                            stroke-linecap="round" transform="rotate(-90 100 100)"
+                            stroke-dasharray="515" stroke-dashoffset="300" style="transition:stroke-dashoffset 0.4s ease;"/>
+                  </svg>
+                  <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div style="font-size:1.05rem; font-weight:800; font-family:'Archivo Black', sans-serif; color:var(--orange);" id="previewProfitNum">$812.30</div>
+                    <div style="font-size:0.5rem; color:var(--muted); font-weight:700; margin-top:2px;">of <span id="previewTargetNumValue">$2,000.00</span></div>
+                  </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; width:130px; font-size:0.58rem; color:var(--muted); font-family:'IBM Plex Mono', monospace; font-weight:700;">
+                  <span>$0</span>
+                  <span id="previewPctLabel">40.6%</span>
+                  <span id="previewTargetLabelValue">$2,000</span>
+                </div>
+              </div>
+              
+              <!-- Mock System Rules -->
+              <div style="font-size:0.76rem; font-weight:600; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--muted);">Simulated Mode:</span>
+                  <span id="previewMockStatus" class="mono" style="font-weight:700; color:var(--loss);">OFF</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                  <span style="color:var(--muted);">Allowed IDs:</span>
+                  <span id="previewAllowedList" class="mono" style="font-weight:700; color:var(--ink); font-size:0.7rem; max-width:120px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">415868928</span>
+                </div>
+              </div>
             </div>
+            
           </div>
           
           <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -557,9 +609,43 @@ function updateAdminUI() {
   if(adminPassword) {
     loginForm.style.display = "none";
     settingsForm.style.display = "block";
+    updateAdminPreview();
   } else {
     loginForm.style.display = "block";
     settingsForm.style.display = "none";
+  }
+}
+
+function updateAdminPreview() {
+  const targetVal = parseFloat(document.getElementById("settingTargetInput").value) || 2000;
+  const mockVal = document.getElementById("settingMockToggle").checked;
+  const accountsVal = document.getElementById("settingAccountsInput").value;
+  
+  const ptVal = document.getElementById("previewTargetNumValue");
+  const ptLbl = document.getElementById("previewTargetLabelValue");
+  const pMock = document.getElementById("previewMockStatus");
+  const pAcc = document.getElementById("previewAllowedList");
+  
+  if (ptVal) ptVal.textContent = fmtMoney(targetVal);
+  if (ptLbl) ptLbl.textContent = fmtMoney(targetVal);
+  
+  // Calculate preview circle percentage based on sample $812.30 balance
+  const mockProfit = 812.30;
+  const pct = Math.max(0, Math.min(100, (mockProfit / targetVal) * 100));
+  const ppLabel = document.getElementById("previewPctLabel");
+  if (ppLabel) ppLabel.textContent = pct.toFixed(1) + "%";
+  
+  const circumference = 515;
+  const dash = circumference - (circumference * pct / 100);
+  const arc = document.getElementById("previewGaugeArc");
+  if(arc) arc.style.strokeDashoffset = dash;
+  
+  if (pMock) {
+    pMock.textContent = mockVal ? "ACTIVE" : "OFF";
+    pMock.style.color = mockVal ? "var(--profit)" : "var(--loss)";
+  }
+  if (pAcc) {
+    pAcc.textContent = accountsVal || "All Accounts";
   }
 }
 
@@ -580,6 +666,7 @@ async function fetchSettings() {
       if(sa) sa.value = (settings.allowed_accounts || []).join(", ");
       
       updateTargetLabels();
+      updateAdminPreview();
     }
   } catch (e) {
     console.error("Failed to load settings:", e);
@@ -1020,6 +1107,14 @@ if (btnSave) {
     }
   });
 }
+
+// Hook up real-time settings live preview input change listeners
+const targetInput = document.getElementById("settingTargetInput");
+const mockToggle = document.getElementById("settingMockToggle");
+const accountsInput = document.getElementById("settingAccountsInput");
+if(targetInput) targetInput.addEventListener("input", updateAdminPreview);
+if(mockToggle) mockToggle.addEventListener("change", updateAdminPreview);
+if(accountsInput) accountsInput.addEventListener("input", updateAdminPreview);
 
 async function init(){
   await fetchSettings(); // Sync custom target and mock data from DB first
