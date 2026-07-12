@@ -297,6 +297,8 @@
       <a href="#watchPanel" data-nav="watch"><span class="ic"></span>Watchlist</a>
       <h3 style="margin-top:22px;">Bridge</h3>
       <a href="#" id="reconnectLinkSidebar"><span class="ic"></span>Reconnect</a>
+      <h3 style="margin-top:22px;">Settings</h3>
+      <a href="#" data-nav="admin"><span class="ic"></span>Admin Panel</a>
     </nav>
     <div class="sidebar-clock mono" id="clockSidebar">--:--:--</div>
   </aside>
@@ -323,10 +325,76 @@
       <a href="#watchPanel" data-nav="watch"><span class="ic"></span>Watchlist</a>
       <h3 style="margin-top:22px;">Bridge</h3>
       <a href="#" id="reconnectLink"><span class="ic"></span>Reconnect</a>
+      <h3 style="margin-top:22px;">Settings</h3>
+      <a href="#" data-nav="admin"><span class="ic"></span>Admin Panel</a>
     </nav>
 
     <main>
       <div id="statusBanner" class="status-banner" style="display:none; margin-bottom:20px;"></div>
+
+      <!-- Admin view panel -->
+      <section class="panel" id="adminPanel" data-view="admin" style="display:none; margin-bottom:24px;">
+        <div class="eyebrow">Admin Panel</div>
+        
+        <!-- Login Form -->
+        <div id="adminLoginForm">
+          <div style="font-family:'Archivo Black', sans-serif; font-size:1.3rem; margin-bottom:12px;">Admin Access Required</div>
+          <p style="color:var(--muted); font-size:0.86rem; margin-bottom:20px; font-weight:600;">Please enter your admin credentials to customize targets and system settings.</p>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px; max-width:320px;">
+            <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:var(--muted);">Secret Password</label>
+            <input type="password" id="adminPassInput" placeholder="Enter password…" 
+                   style="border:2px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.95rem; font-weight:700; outline:none; background:var(--panel-2);">
+            <div id="adminLoginErr" style="color:var(--loss); font-size:0.76rem; font-weight:700; margin-top:4px; display:none;">Incorrect password.</div>
+          </div>
+          <button id="adminLoginBtn" 
+                  style="border:2px solid var(--line); background:var(--orange); border-radius:30px; padding:12px 24px; font-weight:700; font-size:0.86rem; cursor:pointer; box-shadow:var(--shadow-sm); transition:all 0.15s ease;">
+            Login Security Gate
+          </button>
+        </div>
+        
+        <!-- Settings Form (hidden initially) -->
+        <div id="adminSettingsForm" style="display:none;">
+          <div style="font-family:'Archivo Black', sans-serif; font-size:1.3rem; margin-bottom:8px;">Control Room</div>
+          <p style="color:var(--muted); font-size:0.86rem; margin-bottom:24px; font-weight:600;">Settings are saved in MongoDB and synced globally.</p>
+          
+          <div style="display:flex; flex-direction:column; gap:20px; max-width:480px; margin-bottom:28px;">
+            <!-- Target USD -->
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:var(--muted);">Profit Target (USD)</label>
+              <input type="number" id="settingTargetInput" placeholder="e.g. 2000" 
+                     style="border:2px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.95rem; font-weight:700; outline:none; background:var(--panel-2);">
+            </div>
+            
+            <!-- Mock Mode Toggle -->
+            <div style="display:flex; align-items:center; justify-content:space-between; border:2px dashed var(--line); border-radius:14px; padding:14px 18px; background:var(--panel-2);">
+              <div style="flex:1; padding-right:12px;">
+                <div style="font-size:0.86rem; font-weight:800;">Simulated Demo Mode</div>
+                <div style="font-size:0.7rem; color:var(--muted); font-weight:600; margin-top:2px;">Override live MT5 data with sandbox statistics.</div>
+              </div>
+              <input type="checkbox" id="settingMockToggle" style="width:20px; height:20px; cursor:pointer; accent-color:var(--orange);">
+            </div>
+            
+            <!-- Allowed Accounts -->
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label style="font-size:0.76rem; font-weight:800; text-transform:uppercase; color:var(--muted);">Allowed MT5 Account IDs (comma separated)</label>
+              <input type="text" id="settingAccountsInput" placeholder="e.g. 415868928, 12345678" 
+                     style="border:2px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.95rem; font-weight:700; outline:none; background:var(--panel-2);">
+            </div>
+          </div>
+          
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button id="adminSaveSettingsBtn" 
+                    style="border:2px solid var(--line); background:var(--orange); border-radius:30px; padding:12px 28px; font-weight:700; font-size:0.86rem; cursor:pointer; box-shadow:var(--shadow-sm);">
+              Save Configuration
+            </button>
+            <button id="adminLogoutBtn" 
+                    style="border:2px solid var(--line); background:var(--panel); border-radius:30px; padding:12px 24px; font-weight:700; font-size:0.86rem; cursor:pointer; box-shadow:var(--shadow-sm);">
+              Logout Session
+            </button>
+          </div>
+          <div id="adminSaveStatus" style="color:var(--profit); font-size:0.82rem; font-weight:700; margin-top:12px; display:none;">✓ Settings updated and synced successfully!</div>
+        </div>
+      </section>
 
   <div class="layout">
     <div class="col">
@@ -470,11 +538,53 @@ let currentPeriod = "day";
 document.addEventListener("DOMContentLoaded", ()=>{
   const lbl = document.getElementById("apiBaseLabel");
   if(lbl) lbl.textContent = API_BASE.replace(/^https?:\/\//, "").replace(/\/api$/, "");
+  
+  // Apply initial admin view UI visibility states
+  updateAdminUI();
 });
 let usingMockData = false;
 let allOrders = [];
 let sortKey = "time";
 let sortDir = -1;
+
+// Admin panel states
+let adminPassword = sessionStorage.getItem("admin_password") || "";
+
+function updateAdminUI() {
+  const loginForm = document.getElementById("adminLoginForm");
+  const settingsForm = document.getElementById("adminSettingsForm");
+  if(!loginForm || !settingsForm) return;
+  if(adminPassword) {
+    loginForm.style.display = "none";
+    settingsForm.style.display = "block";
+  } else {
+    loginForm.style.display = "block";
+    settingsForm.style.display = "none";
+  }
+}
+
+async function fetchSettings() {
+  try {
+    const res = await fetch(API_BASE + "/settings");
+    if (res.ok) {
+      const settings = await res.json();
+      TARGET_USD = parseFloat(settings.target_usd) || 2000;
+      localStorage.setItem("mt5_target", TARGET_USD);
+      usingMockData = settings.mock_data_enabled || false;
+      
+      const st = document.getElementById("settingTargetInput");
+      const sm = document.getElementById("settingMockToggle");
+      const sa = document.getElementById("settingAccountsInput");
+      if(st) st.value = TARGET_USD;
+      if(sm) sm.checked = usingMockData;
+      if(sa) sa.value = (settings.allowed_accounts || []).join(", ");
+      
+      updateTargetLabels();
+    }
+  } catch (e) {
+    console.error("Failed to load settings:", e);
+  }
+}
 
 const mockAccount = {
   account_id: 10045821, account_name: "Demo Trading", server: "Demo-Server (demo)",
@@ -751,18 +861,25 @@ function setLive(ok){
 }
 
 async function loadAccount(){
+  if(usingMockData){
+    setLive(false);
+    renderAccount(mockAccount);
+    renderSparkline(mockEquityCurve);
+    showBanner("Simulated Demo Mode active (configured via Admin Panel).");
+    return;
+  }
   try{
     const res = await fetch(`${API_BASE}/account`);
     if(!res.ok) throw new Error("bad response");
     const data = await res.json();
     renderAccount(data);
     renderSparkline(mockEquityCurve.map((v,i,arr)=> i===arr.length-1 ? data.equity : v));
-    usingMockData = false; setLive(true); hideBanner();
+    setLive(true); hideBanner();
   }catch(e){
-    usingMockData = true; setLive(false);
+    setLive(false);
     renderAccount(mockAccount);
     renderSparkline(mockEquityCurve);
-    showBanner("Bridge not reachable at " + API_BASE.replace(/^https?:\/\//, "") + " — showing demo data. Make sure your MT5 EA is pushing updates.");
+    showBanner("Bridge not reachable at " + API_BASE.replace(/^https?:\/\//, "") + " — showing cache/demo data. Make sure your MT5 EA is running.");
   }
 }
 async function loadOrders(period){
@@ -816,7 +933,96 @@ document.head.appendChild(spinStyle);
 document.getElementById("refreshBtn").addEventListener("click", (e)=>{ spinRefreshIcon(e.currentTarget); init(); });
 document.getElementById("refreshBtnSidebar").addEventListener("click", ()=> init());
 
+// Admin actions click listeners
+const btnLogin = document.getElementById("adminLoginBtn");
+if (btnLogin) {
+  btnLogin.addEventListener("click", async () => {
+    const pass = document.getElementById("adminPassInput").value;
+    const err = document.getElementById("adminLoginErr");
+    if(err) err.style.display = "none";
+    
+    try {
+      const res = await fetch(API_BASE + "/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pass })
+      });
+      if (res.ok) {
+        adminPassword = pass;
+        sessionStorage.setItem("admin_password", pass);
+        updateAdminUI();
+      } else {
+        if(err) err.style.display = "block";
+      }
+    } catch (e) {
+      if(err) {
+        err.textContent = "Server connection failed.";
+        err.style.display = "block";
+      }
+    }
+  });
+}
+
+const btnLogout = document.getElementById("adminLogoutBtn");
+if (btnLogout) {
+  btnLogout.addEventListener("click", () => {
+    adminPassword = "";
+    sessionStorage.removeItem("admin_password");
+    const input = document.getElementById("adminPassInput");
+    if(input) input.value = "";
+    updateAdminUI();
+  });
+}
+
+const btnSave = document.getElementById("adminSaveSettingsBtn");
+if (btnSave) {
+  btnSave.addEventListener("click", async () => {
+    const targetVal = parseFloat(document.getElementById("settingTargetInput").value) || 2000;
+    const mockVal = document.getElementById("settingMockToggle").checked;
+    const accountsVal = document.getElementById("settingAccountsInput").value
+      .split(",")
+      .map(x => x.trim())
+      .filter(x => x)
+      .map(x => parseInt(x))
+      .filter(x => !isNaN(x));
+      
+    const status = document.getElementById("adminSaveStatus");
+    if(status) status.style.display = "none";
+    
+    try {
+      const res = await fetch(API_BASE + "/settings", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-Admin-Password": adminPassword
+        },
+        body: JSON.stringify({
+          password: adminPassword,
+          settings: {
+            target_usd: targetVal,
+            mock_data_enabled: mockVal,
+            allowed_accounts: accountsVal
+          }
+        })
+      });
+      
+      if (res.ok) {
+        if(status) {
+          status.style.display = "block";
+          setTimeout(() => { status.style.display = "none"; }, 3000);
+        }
+        await init(); // Reload UI state with new values
+      } else {
+        alert("Failed to save settings. Unauthorized.");
+      }
+    } catch (e) {
+      alert("Error connecting to server to save settings.");
+    }
+  });
+}
+
 async function init(){
+  await fetchSettings(); // Sync custom target and mock data from DB first
   await loadAccount();
   await loadOrders(currentPeriod);
   await loadProfitTotals();

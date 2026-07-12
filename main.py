@@ -40,7 +40,12 @@ dashboard_state = {
     "positions": [],
     "history": [],
     "watchlist": [],
-    "last_update": None
+    "last_update": None,
+    "settings": {
+        "target_usd": 2000.0,
+        "mock_data_enabled": False,
+        "allowed_accounts": [415868928]
+    }
 }
 
 # MongoDB Settings
@@ -76,6 +81,19 @@ def load_state_from_mongodb():
         if state:
             state.pop("_id", None)
             dashboard_state.update(state)
+            
+            # Ensure settings exist with default fallbacks for legacy DB records
+            if "settings" not in dashboard_state or not isinstance(dashboard_state["settings"], dict):
+                dashboard_state["settings"] = {}
+            defaults = {
+                "target_usd": 2000.0,
+                "mock_data_enabled": False,
+                "allowed_accounts": [415868928]
+            }
+            for k, v in defaults.items():
+                if k not in dashboard_state["settings"]:
+                    dashboard_state["settings"][k] = v
+                    
             logger.info("Loaded state from MongoDB successfully")
             save_state_cache()
     except Exception as e:
@@ -446,7 +464,54 @@ def api_update():
     except Exception as e:
         logger.error(f"Error in api_update: {str(e)}")
         return jsonify({"error": str(e)}), 500
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
+@app.route('/api/admin/login', methods=['POST'])
+def api_admin_login():
+    try:
+        data = flask.request.get_json(force=True)
+        password = data.get("password")
+        if password == ADMIN_PASSWORD:
+            return jsonify({"success": True})
+        return jsonify({"error": "Incorrect password"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/settings', methods=['GET', 'POST'])
+def api_settings():
+    global dashboard_state
+    if flask.request.method == 'POST':
+        try:
+            # Check basic password header or payload security
+            password = flask.request.headers.get("X-Admin-Password")
+            if password != ADMIN_PASSWORD:
+                data = flask.request.get_json(force=True)
+                password = data.get("password")
+                if password != ADMIN_PASSWORD:
+                    return jsonify({"error": "Unauthorized"}), 401
+            else:
+                data = flask.request.get_json(force=True)
+            
+            settings = data.get("settings", {})
+            if "target_usd" in settings:
+                dashboard_state["settings"]["target_usd"] = float(settings["target_usd"])
+            if "mock_data_enabled" in settings:
+                dashboard_state["settings"]["mock_data_enabled"] = bool(settings["mock_data_enabled"])
+            if "allowed_accounts" in settings:
+                dashboard_state["settings"]["allowed_accounts"] = [int(x) for x in settings["allowed_accounts"]]
+            
+            save_state_cache()
+            save_state_to_mongodb()
+            return jsonify({"success": True, "settings": dashboard_state["settings"]})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        # GET method
+        return jsonify(dashboard_state.get("settings", {
+            "target_usd": 2000.0,
+            "mock_data_enabled": False,
+            "allowed_accounts": [415868928]
+        }))
 @app.route('/api/account')
 def api_account():
     if MT5_AVAILABLE and ensure_mt5_connection():
