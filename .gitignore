@@ -1,0 +1,11 @@
+__pycache__/
+*.ex5
+*.db
+state_cache.json
+compile_log.txt
+databes.txt
+*.pyc
+.tempmediaStorage/
+*walkthrough.md
+*task.md
+*implementation_plan.md
