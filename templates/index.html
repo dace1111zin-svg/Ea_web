@@ -286,6 +286,207 @@
       gap: 24px !important;
     }
   }
+
+  /* Calendar Styles */
+  .calendar-container {
+    margin-top: 15px;
+  }
+  .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 600px) {
+    .calendar-grid, .calendar-header {
+      gap: 4px;
+    }
+  }
+  .calendar-day {
+    background: var(--panel);
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    padding: 12px 8px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+  @media (max-width: 600px) {
+    .calendar-day {
+      min-height: 60px;
+      padding: 6px 4px;
+    }
+  }
+  .calendar-day:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--shadow-sm);
+    background: var(--panel-2);
+  }
+  .calendar-day.empty {
+    background: transparent;
+    border: none;
+    cursor: default;
+    pointer-events: none;
+  }
+  .calendar-day .day-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+  .calendar-day .day-profit {
+    font-size: 0.76rem;
+    font-weight: 800;
+    margin-top: 4px;
+  }
+  .calendar-day .profit-full { display: inline; }
+  .calendar-day .profit-compact { display: none; }
+  @media (max-width: 600px) {
+    .calendar-day .day-num {
+      font-size: 0.75rem;
+    }
+    .calendar-day .day-profit {
+      font-size: 0.65rem;
+    }
+    .calendar-day .profit-full { display: none; }
+    .calendar-day .profit-compact { display: inline; }
+    .calendar-day .day-count { display: none !important; }
+  }
+  .calendar-day .day-count {
+    font-size: 0.6rem;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(21, 19, 15, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open {
+    display: flex;
+  }
+  .modal-window {
+    background: var(--panel);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 550px;
+    max-height: 85vh;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    animation: modalSlide 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+  }
+  @keyframes modalSlide {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel-2);
+  }
+  .modal-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 1.15rem;
+    color: var(--ink);
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .hourly-item {
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--panel-2);
+    overflow: hidden;
+  }
+  .hourly-header {
+    padding: 10px 16px;
+    background: var(--panel);
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+  }
+  .hourly-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+  }
+  .hourly-summary {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .hourly-trades {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--panel-2);
+  }
+  .hourly-trade-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .hourly-trade-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hourly-trade-vol {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
 </style>
 </head>
 <body>
@@ -301,6 +502,7 @@
       <a href="#" class="active" data-nav="overview"><i class="fa-solid fa-table-columns ic"></i>Overview</a>
       <a href="#positionsPanel" data-nav="positions"><i class="fa-solid fa-arrow-trend-up ic"></i>Open Positions</a>
       <a href="#ordersPanel" data-nav="history"><i class="fa-solid fa-clock-rotate-left ic"></i>Order History</a>
+      <a href="#calendarPanel" data-nav="calendar"><i class="fa-solid fa-calendar-days ic"></i>Monthly Report</a>
       <a href="#watchPanel" data-nav="watch"><i class="fa-solid fa-binoculars ic"></i>Watchlist</a>
       <h3 style="margin-top:22px;">Bridge</h3>
       <a href="#" id="reconnectLinkSidebar"><i class="fa-solid fa-rotate ic"></i>Reconnect</a>
@@ -329,6 +531,7 @@
       <a href="#" class="active" data-nav="overview"><i class="fa-solid fa-table-columns ic"></i>Overview</a>
       <a href="#positionsPanel" data-nav="positions"><i class="fa-solid fa-arrow-trend-up ic"></i>Open Positions</a>
       <a href="#ordersPanel" data-nav="history"><i class="fa-solid fa-clock-rotate-left ic"></i>Order History</a>
+      <a href="#calendarPanel" data-nav="calendar"><i class="fa-solid fa-calendar-days ic"></i>Monthly Report</a>
       <a href="#watchPanel" data-nav="watch"><i class="fa-solid fa-binoculars ic"></i>Watchlist</a>
       <h3 style="margin-top:22px;">Bridge</h3>
       <a href="#" id="reconnectLink"><i class="fa-solid fa-rotate ic"></i>Reconnect</a>
@@ -545,6 +748,30 @@
           <span id="ordersNet">Net: $0.00</span>
         </div>
       </section>
+
+      <!-- Calendar View Panel -->
+      <section class="panel" id="calendarPanel" data-view="calendar" style="display:none; margin-bottom:24px;">
+        <div class="orders-head" style="margin-bottom:16px;">
+          <div class="eyebrow" style="margin-bottom:0;">Monthly Trading Report</div>
+          <div style="font-family:'Archivo Black', sans-serif; font-size:1.3rem;" id="calendarMonthYear">—</div>
+        </div>
+        
+        <!-- Summary metrics for calendar -->
+        <div class="mini-stats" style="margin-top:0; margin-bottom:20px;">
+          <div class="mini-stat"><div class="v" id="calProfitTotal">—</div><div class="l">Month Net P/L</div></div>
+          <div class="mini-stat"><div class="v" id="calTradesCount">—</div><div class="l">Total Trades</div></div>
+          <div class="mini-stat"><div class="v" id="calWinRate">—</div><div class="l">Win Rate</div></div>
+        </div>
+
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+          </div>
+          <div class="calendar-grid" id="calendarGrid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="col">
@@ -575,6 +802,9 @@
       </a>
       <a href="#ordersPanel" data-nav="history">
         <i class="fa-solid fa-clock-rotate-left bn-ic"></i><span class="bn-label">History</span>
+      </a>
+      <a href="#calendarPanel" data-nav="calendar">
+        <i class="fa-solid fa-calendar-days bn-ic"></i><span class="bn-label">Calendar</span>
       </a>
       <a href="#watchPanel" data-nav="watch">
         <i class="fa-solid fa-binoculars bn-ic"></i><span class="bn-label">Watch</span>
@@ -764,6 +994,9 @@ document.querySelectorAll(".sidebar-nav a[data-nav], .bottom-nav a[data-nav], .d
     
     closeDrawer();
     showSection(navVal);
+    if(navVal === "calendar") {
+      loadCalendar();
+    }
   });
 });
 
@@ -1116,6 +1349,232 @@ if(targetInput) targetInput.addEventListener("input", updateAdminPreview);
 if(mockToggle) mockToggle.addEventListener("change", updateAdminPreview);
 if(accountsInput) accountsInput.addEventListener("input", updateAdminPreview);
 
+// Calendar & Hourly Modal logic
+let calendarOrders = [];
+
+function fmtMobileProfit(v) {
+  const n = Number(v) || 0;
+  if (n === 0) return "";
+  const abs = Math.abs(n);
+  let str = "";
+  if (abs >= 1000) {
+    str = (abs / 1000).toFixed(0) + "k";
+  } else {
+    str = Math.round(abs).toString();
+  }
+  return (n < 0 ? "-" : "+") + "$" + str;
+}
+
+async function loadCalendar() {
+  const container = document.getElementById("calendarGrid");
+  if (!container) return;
+  container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--muted); font-weight: 600;">Loading calendar trades…</div>`;
+  
+  if (usingMockData) {
+    calendarOrders = mockOrders;
+    renderCalendar();
+    return;
+  }
+  
+  try {
+    const res = await fetch(`${API_BASE}/history?period=current_month`);
+    if (!res.ok) throw new Error("Failed to fetch calendar history");
+    const data = await res.json();
+    calendarOrders = data.orders || [];
+    renderCalendar();
+  } catch (e) {
+    console.error(e);
+    calendarOrders = mockOrders;
+    renderCalendar();
+  }
+}
+
+function renderCalendar() {
+  const container = document.getElementById("calendarGrid");
+  if (!container) return;
+  container.innerHTML = "";
+  
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed
+  
+  // Set month title
+  const monthName = now.toLocaleString('default', { month: 'long' });
+  document.getElementById("calendarMonthYear").textContent = `${monthName} ${year}`;
+  
+  // Calculate days
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay(); // Sunday is 0, Monday is 1...
+  
+  // Convert starting offset to start on Monday
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+  
+  // Render empty cells for offset
+  for (let i = 0; i < startOffset; i++) {
+    const emptyCell = document.createElement("div");
+    emptyCell.className = "calendar-day empty";
+    container.appendChild(emptyCell);
+  }
+  
+  // Track metrics for summary card
+  let monthProfit = 0;
+  let winCount = 0;
+  let totalCount = 0;
+  
+  // Render calendar days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const formattedMonth = String(month + 1).padStart(2, '0');
+    const formattedDay = String(d).padStart(2, '0');
+    const dateStr = `${year}-${formattedMonth}-${formattedDay}`;
+    
+    const dayOrders = calendarOrders.filter(o => o.time.startsWith(dateStr));
+    const dayProfit = dayOrders.reduce((sum, o) => sum + o.profit, 0);
+    
+    // Accumulate total metrics
+    monthProfit += dayProfit;
+    totalCount += dayOrders.length;
+    dayOrders.forEach(o => {
+      if (o.profit > 0) winCount++;
+    });
+    
+    const dayCell = document.createElement("div");
+    dayCell.className = "calendar-day";
+    dayCell.addEventListener("click", () => openHourlyModal(dateStr, dayOrders));
+    
+    let profitHtml = "";
+    let countHtml = "";
+    if (dayOrders.length > 0) {
+      profitHtml = `
+        <div class="day-profit ${dayProfit>=0?'profit-pos':'profit-neg'}">
+          <span class="profit-full">${fmtMoney(dayProfit)}</span>
+          <span class="profit-compact">${fmtMobileProfit(dayProfit)}</span>
+        </div>`;
+      countHtml = `<div class="day-count">${dayOrders.length} ${dayOrders.length===1?'trade':'trades'}</div>`;
+    } else {
+      profitHtml = `<div class="day-profit" style="color:var(--muted-2); font-weight:500;">—</div>`;
+    }
+    
+    dayCell.innerHTML = `
+      <div class="day-num">${d}</div>
+      ${profitHtml}
+      ${countHtml}
+    `;
+    container.appendChild(dayCell);
+  }
+  
+  // Update Calendar Summary Cards
+  const profitTotalEl = document.getElementById("calProfitTotal");
+  if(profitTotalEl) {
+    profitTotalEl.textContent = fmtMoney(monthProfit);
+    profitTotalEl.classList.remove("is-pos", "is-neg");
+    profitTotalEl.classList.add(monthProfit >= 0 ? "is-pos" : "is-neg");
+  }
+  
+  const tradesCountEl = document.getElementById("calTradesCount");
+  if(tradesCountEl) {
+    tradesCountEl.textContent = totalCount + (totalCount === 1 ? " trade" : " trades");
+  }
+  
+  const winRateEl = document.getElementById("calWinRate");
+  if(winRateEl) {
+    const winRate = totalCount > 0 ? (winCount / totalCount * 100) : 0;
+    winRateEl.textContent = winRate.toFixed(1) + "%";
+  }
+}
+
+function openHourlyModal(dateStr, dayOrders) {
+  // Format Date for display
+  const dateObj = new Date(dateStr + 'T00:00:00');
+  const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById("hourlyModalTitle").textContent = formattedDate;
+  
+  const body = document.getElementById("hourlyModalBody");
+  body.innerHTML = "";
+  
+  if (dayOrders.length === 0) {
+    body.innerHTML = `<div style="text-align:center; padding:40px; color:var(--muted); font-weight:600;">No trades closed on this day.</div>`;
+    document.getElementById("hourlyModal").classList.add("open");
+    return;
+  }
+  
+  // Group day orders by hour (0 to 23)
+  const hourlyGroups = {};
+  for (let h = 0; h < 24; h++) {
+    hourlyGroups[h] = [];
+  }
+  
+  dayOrders.forEach(o => {
+    // Parse hour from time string: "YYYY-MM-DD HH:MM"
+    const parts = o.time.split(" ");
+    if (parts.length === 2) {
+      const timePart = parts[1]; // "HH:MM"
+      const hourVal = parseInt(timePart.split(":")[0]);
+      if (!isNaN(hourVal) && hourVal >= 0 && hourVal < 24) {
+        hourlyGroups[hourVal].push(o);
+      }
+    }
+  });
+  
+  // Render hours with trades
+  let hasActiveHours = false;
+  for (let h = 0; h < 24; h++) {
+    const trades = hourlyGroups[h];
+    if (trades.length > 0) {
+      hasActiveHours = true;
+      const hourStart = String(h).padStart(2, '0') + ":00";
+      const hourEnd = String((h + 1) % 24).padStart(2, '0') + ":00";
+      const profitSum = trades.reduce((sum, t) => sum + t.profit, 0);
+      
+      const hourlyDiv = document.createElement("div");
+      hourlyDiv.className = "hourly-item";
+      
+      let tradesHtml = "";
+      trades.forEach(t => {
+        tradesHtml += `
+          <div class="hourly-trade-row">
+            <div class="hourly-trade-info">
+              <span class="side-badge ${t.type==='buy'?'side-buy':'side-sell'}" style="padding:2px 6px; font-size:0.6rem;">${t.type.toUpperCase()}</span>
+              <span style="font-weight:700;">${t.symbol}</span>
+              <span class="hourly-trade-vol">Vol: ${t.volume}</span>
+            </div>
+            <div class="${t.profit>=0?'profit-pos':'profit-neg'}" style="font-weight:700;">${fmtMoney(t.profit)}</div>
+          </div>
+        `;
+      });
+      
+      hourlyDiv.innerHTML = `
+        <div class="hourly-header">
+          <div class="hourly-time"><i class="fa-regular fa-clock" style="margin-right:4px;"></i> ${hourStart} - ${hourEnd}</div>
+          <div class="hourly-summary">
+            <span style="font-size:0.75rem; color:var(--muted); font-weight:700;">${trades.length} ${trades.length===1?'trade':'trades'}</span>
+            <span class="${profitSum>=0?'profit-pos':'profit-neg'}" style="font-weight:800;">${fmtMoney(profitSum)}</span>
+          </div>
+        </div>
+        <div class="hourly-trades">
+          ${tradesHtml}
+        </div>
+      `;
+      body.appendChild(hourlyDiv);
+    }
+  }
+  
+  if (!hasActiveHours) {
+    body.innerHTML = `<div style="text-align:center; padding:40px; color:var(--muted); font-weight:600;">No trade hourly records.</div>`;
+  }
+  
+  document.getElementById("hourlyModal").classList.add("open");
+}
+
+function closeHourlyModal() {
+  document.getElementById("hourlyModal").classList.remove("open");
+}
+
+document.getElementById("hourlyModal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("hourlyModal")) {
+    closeHourlyModal();
+  }
+});
+
 async function init(){
   await fetchSettings(); // Sync custom target and mock data from DB first
   await loadAccount();
@@ -1123,6 +1582,7 @@ async function init(){
   await loadProfitTotals();
   await loadPositions();
   await loadWatchlist();
+  await loadCalendar();
   
   // Apply initial view switching
   const activeNav = document.querySelector(".bottom-nav a.active") || document.querySelector(".sidebar-nav a.active");
@@ -1131,5 +1591,18 @@ async function init(){
 }
 init();
 </script>
+<!-- Hourly Breakdown Modal -->
+<div class="modal-overlay" id="hourlyModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <div class="modal-title" id="hourlyModalTitle">Hourly Breakdown</div>
+      <button class="modal-close" onclick="closeHourlyModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="hourlyModalBody">
+      <!-- Dynamically populated -->
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

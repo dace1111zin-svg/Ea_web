@@ -274,6 +274,8 @@ def get_history(period='day'):
             from_date = now - timedelta(days=7)
         elif period == 'month':
             from_date = now - timedelta(days=30)
+        elif period == 'current_month':
+            from_date = datetime(now.year, now.month, 1)
         else:
             from_date = now - timedelta(days=1)
             
@@ -452,7 +454,22 @@ def api_update():
             
         dashboard_state["account"] = data.get("account", {})
         dashboard_state["positions"] = data.get("positions", [])
-        dashboard_state["history"] = data.get("history", [])
+        
+        # Merge history deals based on ticket ID to persist all trades
+        existing_history = dashboard_state.get("history", [])
+        if not isinstance(existing_history, list):
+            existing_history = []
+        existing_by_ticket = {str(d.get("ticket")): d for d in existing_history if d and d.get("ticket")}
+        
+        new_deals = data.get("history", [])
+        if isinstance(new_deals, list):
+            for deal in new_deals:
+                if deal and deal.get("ticket"):
+                    t_id = str(deal.get("ticket"))
+                    existing_by_ticket[t_id] = deal
+            
+        dashboard_state["history"] = sorted(existing_by_ticket.values(), key=lambda x: x.get("time", ""), reverse=True)
+        
         dashboard_state["watchlist"] = data.get("watchlist", [])
         dashboard_state["last_update"] = datetime.now().isoformat()
         
@@ -464,7 +481,7 @@ def api_update():
     except Exception as e:
         logger.error(f"Error in api_update: {str(e)}")
         return jsonify({"error": str(e)}), 500
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "nhoy")
 
 @app.route('/api/admin/login', methods=['POST'])
 def api_admin_login():
@@ -552,6 +569,8 @@ def api_history():
         cutoff = now - timedelta(days=7)
     elif period == 'month':
         cutoff = now - timedelta(days=30)
+    elif period == 'current_month':
+        cutoff = datetime(now.year, now.month, 1)
     else:
         cutoff = now - timedelta(days=1)
         

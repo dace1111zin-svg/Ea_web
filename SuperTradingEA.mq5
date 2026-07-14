@@ -21,7 +21,8 @@ enum ENUM_LOT_MODE {
 enum ENUM_TP_MODE {
     MODE_FIXED_PIPS,        // Fixed Take Profit Pips
     MODE_TRAILING,          // Trailing Basket Take Profit
-    MODE_ADAPTIVE_ATR       // Adaptive ATR Take Profit
+    MODE_ADAPTIVE_ATR,      // Adaptive ATR Take Profit
+    MODE_FIXED_MONEY        // Fixed Take Profit Money
 };
 enum ENUM_SESSION_MODE {
     SESSION_24H,            // 24 Hours Trading (24/7)
@@ -31,7 +32,7 @@ enum ENUM_SESSION_MODE {
 // ==================================================================
 // License Protection System
 // ==================================================================
-int Allowed_Accounts[] = { 415868928 }; 
+int Allowed_Accounts[] = { 415868928, 413789211, 414018805 }; 
 datetime Allowed_ExpiryDate = D'2026.12.31 23:59'; 
 const int HybridStartStepLayer = 7;     
 
@@ -43,7 +44,7 @@ input ENUM_LOT_MODE LotCalculatedMode     = MODE_FIBO;
 
 input group "=== MULTIPLIER   ===";
 input bool   UseDynamicLotByEquity        = true;
-input double HardMaxLotSize               = 0.10;       
+input double HardMaxLotSize               = 5.00;       
 input double AutoLotEquityBase            = 500.0; 
 
 input group "=== STOCHASTIC FILTER ===";
@@ -107,6 +108,7 @@ input group "=== BASKET TAKE PROFIT ===";
 input bool   EnableBasketTakeProfit       = true;   
 input ENUM_TP_MODE BasketTakeProfitMode   = MODE_FIXED_PIPS; 
 input double BasketTP_FixedPips           = 20.0;   
+input double BasketTP_FixedMoney          = 0.05;   // Fixed Take Profit Money (e.g. 0.05 USD, auto-scales on cent accounts)
 input int    BasketTP_ATRSmoothPeriod     = 14;   
 input double BasketTP_ATRMultiplierK      = 0.1;
 input double TrailingPipsPercentage       = 20.0;
@@ -127,7 +129,7 @@ input string            AsiaSessionLocal      = "05:00-03:00";
 
 input group "=== DASHBOARD REMOTE SYNC ===";
 input bool   EnableDashboardSync          = true;
-input string DashboardSyncURL             = "http://localhost:5000/api/update";
+input string DashboardSyncURL             = "https://ea-web-1xmg.onrender.com/api/update";
 input int    SyncIntervalSeconds          = 10; 
 
 int atrHandle   = INVALID_HANDLE;
@@ -488,8 +490,9 @@ double CalculateLotSize(ulong magic, int currentLayers)
     double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
     double maxLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
     
-    // Cap by HardMaxLotSize
-    if(lot > HardMaxLotSize) lot = HardMaxLotSize;
+    // Cap by HardMaxLotSize (ensure it doesn't cap below the user's base lot size)
+    double maxLimit = MathMax(HardMaxLotSize, BaseLotSize);
+    if(lot > maxLimit) lot = maxLimit;
     
     if(lot < minLot) lot = minLot;
     if(lot > maxLot) lot = maxLot;
@@ -681,6 +684,19 @@ void CheckBasketPositions()
                 if(totalProfitUSD >= targetProfitUSD && targetProfitUSD > 0)
                 {
                     PrintFormat("Basket Fixed TP Hit! Magic: %d, Profit: %.2f USD", currentMagic, totalProfitUSD);
+                    CloseBasketByMagic(currentMagic);
+                }
+            }
+            else if(BasketTakeProfitMode == MODE_FIXED_MONEY)
+            {
+                targetProfitUSD = BasketTP_FixedMoney;
+                if(AccountIsCent())
+                {
+                    targetProfitUSD = BasketTP_FixedMoney * 100.0; // scale 0.05 USD to 5.0 cents internally
+                }
+                if(totalProfitUSD >= targetProfitUSD && targetProfitUSD > 0)
+                {
+                    PrintFormat("Basket Fixed Money TP Hit! Magic: %d, Profit: %.2f (Target: %.2f)", currentMagic, totalProfitUSD, targetProfitUSD);
                     CloseBasketByMagic(currentMagic);
                 }
             }
