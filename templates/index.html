@@ -487,6 +487,40 @@
     font-size: 0.72rem;
     color: var(--muted);
   }
+  /* Real-time toggle styles */
+  .switch input:checked + .slider {
+    background-color: #1FAA59;
+  }
+  .switch input:focus + .slider {
+    box-shadow: 0 0 1px #1FAA59;
+  }
+  .switch input:checked + .slider:before {
+    transform: translateX(14px);
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.9); opacity: 0.6; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.6; }
+  }
+  .pulse-dot.active {
+    animation: pulse 1.5s infinite ease-in-out;
+    background-color: #1FAA59 !important;
+  }
+  .pulse-dot.inactive {
+    background-color: #E1483F !important;
+    animation: none;
+  }
 </style>
 </head>
 <body>
@@ -497,6 +531,16 @@
     <div class="logo"><span class="mark"></span>REAL <span class="accent">MT5</span></div>
     <div class="live-pill" style="margin-top:18px;"><span class="ring"></span><span id="liveLabelSidebar">connecting</span></div>
     <button id="refreshBtnSidebar" style="margin-top:10px; border:2px solid var(--ink); background:var(--panel); border-radius:12px; padding:9px 12px; font-weight:700; font-size:0.8rem; cursor:pointer; text-align:left;">&#8635; Refresh data</button>
+    <div class="realtime-toggle-container" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--panel); border: 2px solid var(--ink); border-radius: 12px;">
+      <span style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--ink);">
+        <span class="pulse-dot active" id="realtimePulse" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+        Real-time
+      </span>
+      <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+        <input type="checkbox" id="realtimeToggle" checked style="opacity: 0; width: 0; height: 0;">
+        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px;"></span>
+      </label>
+    </div>
     <nav class="sidebar-nav">
       <h3>Navigate</h3>
       <a href="#" class="active" data-nav="overview"><i class="fa-solid fa-table-columns ic"></i>Overview</a>
@@ -537,6 +581,17 @@
       <a href="#" id="reconnectLink"><i class="fa-solid fa-rotate ic"></i>Reconnect</a>
       <h3 style="margin-top:22px;">Settings</h3>
       <a href="#" data-nav="admin"><i class="fa-solid fa-user-gear ic"></i>Admin Panel</a>
+      <h3 style="margin-top:22px;">Controls</h3>
+      <div class="realtime-toggle-container" style="margin: 10px 0; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--panel); border: 2px solid var(--ink); border-radius: 12px; width: calc(100% - 24px);">
+        <span style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--ink);">
+          <span class="pulse-dot active" id="realtimePulseDrawer" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+          Real-time
+        </span>
+        <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+          <input type="checkbox" id="realtimeToggleDrawer" checked style="opacity: 0; width: 0; height: 0;">
+          <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px;"></span>
+        </label>
+      </div>
     </nav>
 
     <main>
@@ -1588,6 +1643,84 @@ document.getElementById("hourlyModal").addEventListener("click", (e) => {
   }
 });
 
+// Real-time polling controllers
+let updateInterval = null;
+let slowUpdateInterval = null;
+window.isFetchingUpdates = false;
+
+async function fetchRealTimeUpdate() {
+  if (window.isFetchingUpdates) return;
+  window.isFetchingUpdates = true;
+  try {
+    await loadAccount();
+    await loadPositions();
+    await loadWatchlist();
+  } catch (e) {
+    console.error("Error fetching real-time updates:", e);
+  } finally {
+    window.isFetchingUpdates = false;
+  }
+}
+
+async function fetchSlowUpdate() {
+  try {
+    await loadOrders(currentPeriod);
+    await loadProfitTotals();
+    const activeNav = document.querySelector(".sidebar-nav a.active") || document.querySelector(".bottom-nav a.active");
+    if (activeNav && activeNav.getAttribute("data-nav") === "calendar") {
+      await loadCalendar();
+    }
+  } catch (e) {
+    console.error("Error fetching slow updates:", e);
+  }
+}
+
+function startRealTimeUpdates() {
+  if (updateInterval) clearInterval(updateInterval);
+  if (slowUpdateInterval) clearInterval(slowUpdateInterval);
+  
+  updateInterval = setInterval(fetchRealTimeUpdate, 2000);
+  slowUpdateInterval = setInterval(fetchSlowUpdate, 10000);
+}
+
+function stopRealTimeUpdates() {
+  if (updateInterval) {
+    clearInterval(updateInterval);
+    updateInterval = null;
+  }
+  if (slowUpdateInterval) {
+    clearInterval(slowUpdateInterval);
+    slowUpdateInterval = null;
+  }
+}
+
+const rtToggle = document.getElementById("realtimeToggle");
+const rtToggleDrawer = document.getElementById("realtimeToggleDrawer");
+const rtPulse = document.getElementById("realtimePulse");
+const rtPulseDrawer = document.getElementById("realtimePulseDrawer");
+
+function syncToggles(checked) {
+  if (rtToggle) rtToggle.checked = checked;
+  if (rtToggleDrawer) rtToggleDrawer.checked = checked;
+  
+  if (checked) {
+    if (rtPulse) { rtPulse.classList.add("active"); rtPulse.classList.remove("inactive"); }
+    if (rtPulseDrawer) { rtPulseDrawer.classList.add("active"); rtPulseDrawer.classList.remove("inactive"); }
+    startRealTimeUpdates();
+  } else {
+    if (rtPulse) { rtPulse.classList.remove("active"); rtPulse.classList.add("inactive"); }
+    if (rtPulseDrawer) { rtPulseDrawer.classList.remove("active"); rtPulseDrawer.classList.add("inactive"); }
+    stopRealTimeUpdates();
+  }
+}
+
+if (rtToggle) {
+  rtToggle.addEventListener("change", (e) => syncToggles(e.target.checked));
+}
+if (rtToggleDrawer) {
+  rtToggleDrawer.addEventListener("change", (e) => syncToggles(e.target.checked));
+}
+
 async function init(){
   await fetchSettings(); // Sync custom target and mock data from DB first
   await loadAccount();
@@ -1601,6 +1734,10 @@ async function init(){
   const activeNav = document.querySelector(".bottom-nav a.active") || document.querySelector(".sidebar-nav a.active");
   const navVal = activeNav ? activeNav.getAttribute("data-nav") : "overview";
   showSection(navVal);
+  
+  // Initialize real-time updates based on toggle states
+  const isEnabled = (rtToggle && rtToggle.checked) || (rtToggleDrawer && rtToggleDrawer.checked);
+  syncToggles(isEnabled);
 }
 init();
 </script>

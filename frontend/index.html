@@ -1,0 +1,2464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#F9F8F3">
+  <title>MT5 · Premium Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ============================================================
+       ROOT · premium warm minimalist
+       primary: #F65F0D · black: #0B0B0B · off-white: #F9F8F3
+       ============================================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-page: #F9F8F3;
+      --bg-card: #FFFFFF;
+      --bg-card-alt: #FCFBF7;
+      --bg-dark: #0B0B0B;
+
+      --text-primary: #0B0B0B;
+      --text-secondary: #696765;
+      --text-muted: #8A8785;
+      --text-inverse: #FFFFFF;
+
+      --border-black: 3px solid #0B0B0B;
+      --border-light: 2px solid #D6D3D0;
+      --radius-card: 20px;
+      --radius-sm: 12px;
+      --radius-pill: 40px;
+
+      --shadow-card: 0 12px 0 #0B0B0B, 0 8px 24px rgba(11, 11, 11, 0.08);
+      --shadow-card-hover: 0 14px 0 #0B0B0B, 0 12px 32px rgba(11, 11, 11, 0.12);
+
+      --orange: #F65F0D;
+      --orange-light: #FFEEE6;
+      --orange-glow: rgba(246, 95, 13, 0.20);
+      --blue: #4E7AE9;
+      --purple: #8B6CCF;
+      --gold: #D8A528;
+      --gray: #696765;
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --transition: all 0.15s ease-in-out;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: 0;
+      margin: 0;
+    }
+
+    ::selection {
+      background: var(--orange);
+      color: white;
+    }
+
+    /* ============================================================
+       UTILITY
+       ============================================================ */
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    .text-orange {
+      color: var(--orange);
+    }
+
+    .text-gold {
+      color: var(--gold);
+    }
+
+    .text-blue {
+      color: var(--blue);
+    }
+
+    .text-purple {
+      color: var(--purple);
+    }
+
+    .bg-orange {
+      background: var(--orange);
+      color: white;
+    }
+
+    .border-black {
+      border: var(--border-black);
+    }
+
+    .shadow-card {
+      box-shadow: var(--shadow-card);
+    }
+
+    .badge-pill {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: var(--radius-pill);
+      border: 2px solid var(--text-primary);
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    /* ============================================================
+       APP SHELL
+       ============================================================ */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .app-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============================================================
+       SIDEBAR (desktop)
+       ============================================================ */
+    .sidebar {
+      display: none;
+      width: 260px;
+      flex: 0 0 260px;
+      background: var(--bg-card);
+      border-right: var(--border-black);
+      padding: 28px 20px;
+      flex-direction: column;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      box-shadow: 4px 0 0 rgba(11, 11, 11, 0.03);
+    }
+
+    @media (min-width: 1024px) {
+      .sidebar {
+        display: flex;
+      }
+
+      .app-main>header {
+        display: none;
+      }
+
+      .bottom-nav {
+        display: none;
+      }
+
+      main {
+        padding-top: 24px;
+      }
+    }
+
+    .sidebar .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      padding-bottom: 16px;
+      border-bottom: 3px solid var(--text-primary);
+    }
+
+    .sidebar .logo .mark {
+      width: 36px;
+      height: 36px;
+      background: var(--orange);
+      border: 3px solid var(--text-primary);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      color: white;
+      font-size: 0.8rem;
+    }
+
+    .sidebar .logo .accent {
+      color: var(--orange);
+    }
+
+    .sidebar .live-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-primary);
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-pill);
+      width: fit-content;
+    }
+
+    .sidebar .live-pill .ring {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #22C55E;
+      border: 2px solid var(--text-primary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.85);
+      }
+    }
+
+    .sidebar .refresh-btn {
+      margin-top: 4px;
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border: var(--border-black);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .sidebar .refresh-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #0B0B0B;
+      background: var(--orange-light);
+    }
+
+    .sidebar .refresh-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #0B0B0B;
+    }
+
+    .sidebar .refresh-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 20px;
+      flex: 1;
+    }
+
+    .sidebar-nav h3 {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-secondary);
+      font-weight: 700;
+      padding: 8px 4px 4px;
+      margin-top: 12px;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: var(--transition);
+      border: 2px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      background: var(--orange-light);
+      color: var(--text-primary);
+      border-color: var(--orange);
+    }
+
+    .sidebar-nav a .ic {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .sidebar-nav a.active {
+      background: var(--orange-light);
+      color: var(--text-primary);
+      border-color: var(--orange);
+    }
+
+    .sidebar-nav a.active .ic {
+      background: var(--orange);
+    }
+
+    .sidebar-clock {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 3px solid var(--text-primary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+
+    /* ============================================================
+       HEADER (mobile)
+       ============================================================ */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border-bottom: var(--border-black);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    @media (max-width: 1023px) {
+      main {
+        padding-bottom: 100px;
+      }
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .logo .mark {
+      width: 30px;
+      height: 30px;
+      background: var(--orange);
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 900;
+      font-size: 0.7rem;
+    }
+
+    .logo .accent {
+      color: var(--orange);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-right .live-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 12px 4px 8px;
+      background: var(--bg-card);
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-pill);
+    }
+
+    .header-right .live-pill .ring {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22C55E;
+      border: 2px solid var(--text-primary);
+      animation: pulse 2s infinite;
+    }
+
+    .header-right .clock {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 60px;
+    }
+
+    .header-right .menu-btn {
+      background: var(--bg-card);
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1rem;
+      transition: var(--transition);
+      box-shadow: 0 4px 0 #0B0B0B;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .header-right .menu-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #0B0B0B;
+    }
+
+    .header-right .menu-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* ============================================================
+       OVERLAY & DRAWER
+       ============================================================ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 11, 11, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 40;
+      backdrop-filter: blur(2px);
+    }
+
+    .overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -340px;
+      width: 300px;
+      height: 100%;
+      background: var(--bg-card);
+      border-left: var(--border-black);
+      z-index: 50;
+      transition: right 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: -8px 0 0 rgba(11, 11, 11, 0.05);
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer .drawer-close {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      font-weight: 300;
+      cursor: pointer;
+      color: var(--text-primary);
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    .drawer h3 {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-secondary);
+      font-weight: 700;
+      padding: 8px 0 4px;
+      margin-top: 12px;
+    }
+
+    .drawer a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: var(--transition);
+      border: 2px solid transparent;
+    }
+
+    .drawer a:hover {
+      background: var(--orange-light);
+      color: var(--text-primary);
+      border-color: var(--orange);
+    }
+
+    .drawer a .ic {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .drawer a.active {
+      background: var(--orange-light);
+      color: var(--text-primary);
+      border-color: var(--orange);
+    }
+
+    .drawer a.active .ic {
+      background: var(--orange);
+    }
+
+    /* ============================================================
+       BOTTOM NAV (mobile)
+       ============================================================ */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 35;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--bg-card);
+      border-top: var(--border-black);
+      padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+    }
+
+    .bottom-nav a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.55rem;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+      min-width: 48px;
+    }
+
+    .bottom-nav a .bn-ic {
+      font-size: 1.2rem;
+    }
+
+    .bottom-nav a.active {
+      color: var(--orange);
+    }
+
+    .bottom-nav a.active .bn-ic {
+      color: var(--orange);
+    }
+
+    .bottom-nav a .bn-label {
+      font-size: 0.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* ============================================================
+       MAIN CONTENT
+       ============================================================ */
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 20px 16px 80px;
+      width: 100%;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.7fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ============================================================
+       CARDS · bold black borders, retro shadow
+       ============================================================ */
+    .panel {
+      background: var(--bg-card);
+      border: var(--border-black);
+      border-radius: var(--radius-card);
+      padding: 24px 26px;
+      box-shadow: var(--shadow-card);
+      transition: var(--transition);
+    }
+
+    .panel:hover {
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    .status-banner {
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 12px 20px;
+      border: var(--border-black);
+      border-radius: var(--radius-sm);
+      background: var(--orange-light);
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       ACCOUNT CARD
+       ============================================================ */
+    .account-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .account-left {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--orange);
+      border: 3px solid var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1rem;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .account-id-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .account-id-value {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .account-name {
+      text-align: right;
+    }
+
+    .account-name .name {
+      font-size: 1.1rem;
+      font-weight: 900;
+    }
+
+    .account-name .server {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .account-name .badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 0.6rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      padding: 2px 14px;
+      border-radius: var(--radius-pill);
+      border: 2px solid var(--text-primary);
+      background: var(--bg-card);
+    }
+
+    /* ============================================================
+       TABS
+       ============================================================ */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-pill);
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--bg-card);
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .tab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #0B0B0B;
+    }
+
+    .tab.active {
+      background: var(--orange);
+      color: white;
+      border-color: var(--text-primary);
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .tab:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #0B0B0B;
+    }
+
+    /* ============================================================
+       MINI STATS
+       ============================================================ */
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 520px) {
+      .mini-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mini-stat {
+      background: var(--bg-card-alt);
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-sm);
+      padding: 14px 12px;
+      text-align: center;
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .mini-stat .v {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .mini-stat .v.is-pos {
+      color: #22C55E;
+    }
+
+    .mini-stat .v.is-pos::before {
+      content: "▲ ";
+      font-size: 0.6em;
+    }
+
+    .mini-stat .v.is-neg {
+      color: #EF4444;
+    }
+
+    .mini-stat .v.is-neg::before {
+      content: "▽ ";
+      font-size: 0.6em;
+    }
+
+    .mini-stat .l {
+      font-size: 0.55rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    .mini-stat .c {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-family: var(--font-mono);
+    }
+
+    /* ============================================================
+       GAUGE + CHART
+       ============================================================ */
+    .target-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 640px) {
+      .target-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .gauge-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .gauge-wrap {
+      position: relative;
+      width: 180px;
+      height: 180px;
+    }
+
+    .gauge-wrap svg {
+      width: 180px;
+      height: 180px;
+    }
+
+    .gauge-wrap circle {
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.2, 0.9, 0.4, 1);
+    }
+
+    .gauge-figure {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gauge-figure .profit-num {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--orange);
+      font-family: var(--font-mono);
+    }
+
+    .gauge-figure .target-num {
+      font-size: 0.6rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      font-weight: 700;
+    }
+
+    .gauge-labels {
+      display: flex;
+      justify-content: space-between;
+      width: 180px;
+      font-size: 0.6rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      margin-top: 4px;
+      font-weight: 700;
+    }
+
+    .chart-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .chart-head .equity-now {
+      font-weight: 900;
+      font-size: 1.1rem;
+      font-family: var(--font-mono);
+    }
+
+    .chart-head .delta {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    #sparkline {
+      width: 100%;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--text-primary);
+      background: var(--bg-card-alt);
+    }
+
+    /* ============================================================
+       TABLES
+       ============================================================ */
+    .orders-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card-alt);
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      flex: 1;
+      max-width: 200px;
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      width: 100%;
+      font-weight: 600;
+    }
+
+    .search-box input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .export-btn {
+      border: 2px solid var(--text-primary);
+      background: var(--bg-card);
+      border-radius: var(--radius-pill);
+      padding: 6px 16px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      cursor: pointer;
+      color: var(--text-primary);
+      transition: var(--transition);
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .export-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #0B0B0B;
+    }
+
+    .export-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #0B0B0B;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    thead th {
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    thead th:hover {
+      color: var(--text-primary);
+    }
+
+    tbody td {
+      padding: 10px 6px;
+      border-bottom: 2px solid #E5E3DF;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      font-size: 0.75rem;
+    }
+
+    tbody tr:hover {
+      background: var(--orange-light);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .side-badge {
+      font-size: 0.6rem;
+      padding: 2px 12px;
+      border-radius: var(--radius-pill);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      border: 2px solid var(--text-primary);
+    }
+
+    .side-buy {
+      background: #DCFCE7;
+      color: #0B0B0B;
+    }
+
+    .side-sell {
+      background: #FEE2E2;
+      color: #0B0B0B;
+    }
+
+    .profit-pos {
+      color: #22C55E;
+      font-weight: 700;
+    }
+
+    .profit-pos::before {
+      content: "▲ ";
+      font-size: 0.6em;
+    }
+
+    .profit-neg {
+      color: #EF4444;
+      font-weight: 700;
+    }
+
+    .profit-neg::before {
+      content: "▽ ";
+      font-size: 0.6em;
+    }
+
+    .empty-row td {
+      text-align: center;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      padding: 30px 0;
+      font-weight: 600;
+    }
+
+    .orders-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       WATCHLIST
+       ============================================================ */
+    .watch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 4px;
+      border-bottom: 2px solid #E5E3DF;
+    }
+
+    .watch-row:last-child {
+      border-bottom: none;
+    }
+
+    .watch-sym {
+      font-weight: 900;
+      font-size: 0.85rem;
+    }
+
+    .watch-prices {
+      display: flex;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .watch-prices .bid {
+      color: #EF4444;
+    }
+
+    .watch-prices .ask {
+      color: #22C55E;
+    }
+
+    .watch-prices .lbl {
+      color: var(--text-muted);
+      font-size: 0.5rem;
+      display: block;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       SESSION SUMMARY
+       ============================================================ */
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 2px solid #E5E3DF;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .summary-row:last-child {
+      border-bottom: none;
+    }
+
+    .summary-row .label {
+      color: var(--text-secondary);
+    }
+
+    .summary-row .value {
+      font-family: var(--font-mono);
+    }
+
+    /* ============================================================
+       SETTINGS
+       ============================================================ */
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .settings-group label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .settings-group input {
+      border: 2px solid var(--text-primary);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: var(--bg-card-alt);
+      color: var(--text-primary);
+      transition: var(--transition);
+      outline: none;
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .settings-group input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 4px 0 var(--orange);
+    }
+
+    .settings-save-btn {
+      border: 2px solid var(--text-primary);
+      background: var(--orange);
+      border-radius: var(--radius-pill);
+      padding: 12px 0;
+      font-weight: 900;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: white;
+      transition: var(--transition);
+      box-shadow: 0 6px 0 #0B0B0B;
+    }
+
+    .settings-save-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #0B0B0B;
+    }
+
+    .settings-save-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 4px 0 #0B0B0B;
+    }
+
+    .settings-saved {
+      font-size: 0.7rem;
+      color: #22C55E;
+      font-weight: 700;
+      text-align: center;
+      display: none;
+    }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    .page-footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      margin-top: 24px;
+      font-weight: 700;
+      padding: 12px 0;
+      border-top: 3px solid var(--text-primary);
+    }
+
+    .page-footer span {
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 600px) {
+      .panel {
+        padding: 18px 16px;
+      }
+
+      .gauge-wrap {
+        width: 150px;
+        height: 150px;
+      }
+
+      .gauge-wrap svg {
+        width: 150px;
+        height: 150px;
+      }
+
+      .gauge-labels {
+        width: 150px;
+      }
+
+      .gauge-figure .profit-num {
+        font-size: 1.1rem;
+      }
+
+      table {
+        font-size: 0.7rem;
+      }
+
+      tbody td {
+        padding: 8px 4px;
+        font-size: 0.7rem;
+      }
+
+      .search-box {
+        max-width: 140px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .header-right .clock {
+        display: none;
+      }
+
+      .header-right .live-pill span:last-child {
+        display: none;
+      }
+
+      .account-name .name {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* ============================================================
+       LOADING SHIMMER
+       ============================================================ */
+    .loading-shimmer {
+      animation: shimmer 1.5s infinite;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      border-radius: 4px;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+    /* Real-time toggle styles */
+    .switch input:checked + .slider {
+      background-color: #1FAA59;
+    }
+    .switch input:focus + .slider {
+      box-shadow: 0 0 1px #1FAA59;
+    }
+    .switch input:checked + .slider:before {
+      transform: translateX(14px);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.6; }
+    }
+    .pulse-dot.active {
+      animation: pulse 1.5s infinite ease-in-out;
+      background-color: #1FAA59 !important;
+    }
+    .pulse-dot.inactive {
+      background-color: #E1483F !important;
+      animation: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="mark">◈</div>
+        <span>REAL <span class="accent">MT5</span></span>
+      </div>
+      <div class="live-pill">
+        <span class="ring"></span>
+        <span id="liveLabelSidebar">connecting</span>
+      </div>
+      <button class="refresh-btn" id="refreshBtnSidebar">⟳ Refresh</button>
+      <div class="realtime-toggle-container" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-card); border: 2px solid var(--text-primary); border-radius: 12px; margin-bottom: 15px;">
+        <span style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+          <span class="pulse-dot active" id="realtimePulse" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+          Real-time
+        </span>
+        <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+          <input type="checkbox" id="realtimeToggle" checked style="opacity: 0; width: 0; height: 0;">
+          <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px;"></span>
+        </label>
+      </div>
+      <nav class="sidebar-nav">
+        <h3>Navigate</h3>
+        <a href="#" class="active" data-nav="overview"><span class="ic"></span>Overview</a>
+        <a href="#positionsPanel" data-nav="positions"><span class="ic"></span>Positions</a>
+        <a href="#ordersPanel" data-nav="history"><span class="ic"></span>History</a>
+        <a href="#watchPanel" data-nav="watch"><span class="ic"></span>Watchlist</a>
+        <h3>Bridge</h3>
+        <a href="#" id="reconnectLinkSidebar"><span class="ic"></span>Reconnect</a>
+      </nav>
+      <div class="sidebar-clock" id="clockSidebar">--:--:--</div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="app-main">
+      <!-- HEADER (mobile) -->
+      <header>
+        <div class="logo">
+          <div class="mark">◈</div>
+          <span>REAL <span class="accent">MT5</span></span>
+        </div>
+        <div class="header-right">
+          <div class="live-pill">
+            <span class="ring"></span>
+            <span id="liveLabel">connecting</span>
+          </div>
+          <div class="clock" id="clock">--:--:--</div>
+          <button class="menu-btn" id="refreshBtn">⟳</button>
+          <button class="menu-btn" id="menuBtn">☰</button>
+        </div>
+      </header>
+
+      <!-- OVERLAY / DRAWER -->
+      <div class="overlay" id="overlay"></div>
+      <nav class="drawer" id="drawer">
+        <button class="drawer-close" id="drawerClose">✕</button>
+        <h3>Navigate</h3>
+        <a href="#" class="active"><span class="ic"></span>Overview</a>
+        <a href="#positionsPanel"><span class="ic"></span>Positions</a>
+        <a href="#ordersPanel"><span class="ic"></span>History</a>
+        <a href="#watchPanel"><span class="ic"></span>Watchlist</a>
+        <h3>Bridge</h3>
+        <a href="#" id="reconnectLink"><span class="ic"></span>Reconnect</a>
+        <h3 style="margin-top:22px;">Controls</h3>
+        <div class="realtime-toggle-container" style="margin: 10px 0; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--bg-card); border: 2px solid var(--text-primary); border-radius: 12px; width: calc(100% - 24px);">
+          <span style="font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+            <span class="pulse-dot active" id="realtimePulseDrawer" style="width: 8px; height: 8px; border-radius: 50%; display: inline-block;"></span>
+            Real-time
+          </span>
+          <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+            <input type="checkbox" id="realtimeToggleDrawer" checked style="opacity: 0; width: 0; height: 0;">
+            <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px;"></span>
+          </label>
+        </div>
+      </nav>
+
+      <!-- MAIN CONTENT -->
+      <main>
+        <div id="statusBanner" class="status-banner" style="display:none;"></div>
+
+        <div class="layout">
+          <!-- LEFT COLUMN -->
+          <div class="col">
+            <!-- ACCOUNT -->
+            <section class="panel">
+              <div class="eyebrow">Account</div>
+              <div class="account-row">
+                <div class="account-left">
+                  <div class="avatar" id="accInitials">--</div>
+                  <div>
+                    <div class="account-id-label">ID ACC</div>
+                    <div class="account-id-value" id="accId">—</div>
+                  </div>
+                </div>
+                <div class="account-name">
+                  <div class="name" id="accName">—</div>
+                  <div class="server" id="accServer">—</div>
+                  <div class="badge mono" id="accCurrency">—</div>
+                </div>
+              </div>
+              <div class="tabs">
+                <div class="tab active" data-period="day">Day</div>
+                <div class="tab" data-period="week">Week</div>
+                <div class="tab" data-period="month">Month</div>
+              </div>
+              <div class="mini-stats">
+                <div class="mini-stat">
+                  <div class="v" id="statProfitDay">—</div>
+                  <div class="l">Day</div>
+                  <div class="c" id="countProfitDay">0 trades</div>
+                </div>
+                <div class="mini-stat">
+                  <div class="v" id="statProfitWeek">—</div>
+                  <div class="l">Week</div>
+                  <div class="c" id="countProfitWeek">0 trades</div>
+                </div>
+                <div class="mini-stat">
+                  <div class="v" id="statProfitMonth">—</div>
+                  <div class="l">Month</div>
+                  <div class="c" id="countProfitMonth">0 trades</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- GAUGE + SPARK -->
+            <section class="panel">
+              <div class="eyebrow" id="targetEyebrow">Progress to $2,000 target</div>
+              <div class="target-grid">
+                <div class="gauge-box">
+                  <div class="gauge-wrap">
+                    <svg viewBox="0 0 200 200">
+                      <circle cx="100" cy="100" r="82" fill="none" stroke="#0B0B0B" stroke-width="12" />
+                      <circle id="gaugeArc" cx="100" cy="100" r="82" fill="none" stroke="#F65F0D" stroke-width="12"
+                        stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="515"
+                        stroke-dashoffset="515" />
+                    </svg>
+                    <div class="gauge-figure">
+                      <div class="profit-num" id="profitNum">$0.00</div>
+                      <div class="target-num">of <span id="targetNumValue">$2,000.00</span></div>
+                    </div>
+                  </div>
+                  <div class="gauge-labels">
+                    <span>$0</span>
+                    <span id="progressPctLabel">0%</span>
+                    <span id="targetLabelValue">$2,000</span>
+                  </div>
+                </div>
+                <div class="chart-col">
+                  <div class="chart-head">
+                    <div>
+                      <div
+                        style="font-size:0.6rem; color:var(--text-secondary); font-weight:700; text-transform:uppercase; letter-spacing:1px;">
+                        Equity</div>
+                      <div class="equity-now" id="equityNow">$0.00</div>
+                    </div>
+                    <div class="delta" id="equityDelta">+0.00%</div>
+                  </div>
+                  <svg id="sparkline" viewBox="0 0 300 100" preserveAspectRatio="none"></svg>
+                </div>
+              </div>
+            </section>
+
+            <!-- POSITIONS -->
+            <section class="panel" id="positionsPanel">
+              <div class="eyebrow">Open Positions</div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Vol</th>
+                    <th>Open</th>
+                    <th>Current</th>
+                    <th>Floating P/L</th>
+                  </tr>
+                </thead>
+                <tbody id="positionsBody">
+                  <tr class="empty-row">
+                    <td colspan="6">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+
+            <!-- HISTORY -->
+            <section class="panel" id="ordersPanel">
+              <div class="orders-head">
+                <div class="eyebrow" style="margin-bottom:0;" id="ordersLabel">Order History — Day</div>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                  <div class="search-box"><span>⌕</span><input type="text" id="searchInput" placeholder="Filter…"></div>
+                  <button class="export-btn" id="exportCsvBtn">↓ CSV</button>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Vol</th>
+                    <th>Price</th>
+                    <th data-sort="profit">Profit ⇅</th>
+                    <th data-sort="time">Time ⇅</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersBody">
+                  <tr class="empty-row">
+                    <td colspan="7">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="orders-footer">
+                <span id="ordersCount">0 trades</span>
+                <span id="ordersNet">Net: $0.00</span>
+              </div>
+            </section>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="col">
+            <!-- WATCHLIST -->
+            <section class="panel" id="watchPanel">
+              <div class="eyebrow">Watchlist</div>
+              <div id="watchBody"></div>
+            </section>
+
+            <!-- SESSION SUMMARY -->
+            <section class="panel">
+              <div class="eyebrow">Session Summary</div>
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <div class="summary-row"><span class="label">Open positions</span><span class="value"
+                    id="summaryOpenCount">0</span></div>
+                <div class="summary-row"><span class="label">Floating P/L</span><span class="value"
+                    id="summaryFloating">$0.00</span></div>
+                <div class="summary-row"><span class="label">Closed trades (day)</span><span class="value"
+                    id="summaryClosedDay">0</span></div>
+              </div>
+            </section>
+
+            <!-- SETTINGS -->
+            <section class="panel" id="settingsPanel">
+              <div class="eyebrow">Settings</div>
+              <div class="settings-group">
+                <label>Profit target ($)<input type="number" id="settingsTarget" min="1" step="1" value="2000"></label>
+                <label>Bridge URL<input type="text" id="settingsApiBase" placeholder="http://localhost:8000"></label>
+                <button class="settings-save-btn" id="settingsSave">Save &amp; Reconnect</button>
+                <div class="settings-saved" id="settingsSaved">✓ Saved</div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <footer class="page-footer">
+          MT5 bridge · <span class="mono" id="apiBaseLabel">localhost:8000</span>
+        </footer>
+      </main>
+
+      <!-- BOTTOM NAV -->
+      <nav class="bottom-nav">
+        <a href="#" class="active" data-nav="overview"><span class="bn-ic">●</span><span
+            class="bn-label">Overview</span></a>
+        <a href="#positionsPanel" data-nav="positions"><span class="bn-ic">◆</span><span
+            class="bn-label">Positions</span></a>
+        <a href="#ordersPanel" data-nav="history"><span class="bn-ic">▤</span><span class="bn-label">History</span></a>
+        <a href="#watchPanel" data-nav="watch"><span class="bn-ic">★</span><span class="bn-label">Watch</span></a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ============================================================
+     JAVASCRIPT - FIXED & IMPROVED
+     ============================================================ -->
+  <script>
+    (function () {
+      "use strict";
+
+      // ----- Configuration -----
+      let API_BASE = (function () {
+        try { return localStorage.getItem("mt5_api_base") || "http://localhost:8000"; } catch (e) { return "http://localhost:8000"; }
+      })();
+
+      let TARGET_USD = (function () {
+        try { return parseFloat(localStorage.getItem("mt5_target")) || 2000; } catch (e) { return 2000; }
+      })();
+
+      const AUTO_CANDIDATES = [
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://[::1]:8000"
+      ];
+
+      let currentPeriod = "day";
+      let usingMockData = false;
+      let allOrders = [];
+      let lastFilteredOrders = [];
+      let sortKey = "time";
+      let sortDir = -1;
+      let refreshInterval = null;
+      let reconnectInterval = null;
+      let reconnectAttempts = 0;
+      let isReconnecting = false;
+      let isInitialized = false;
+      const MAX_RECONNECT_ATTEMPTS = 10;
+      const RECONNECT_DELAY = 5000;
+
+      function safeGet(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+      }
+
+      function safeSet(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) { /* ignore */ }
+      }
+
+      // ----- Mock Data (fallback) -----
+      const mockAccount = {
+        account_id: 10045821,
+        account_name: "Demo Trading",
+        server: "Demo-Server (demo)",
+        currency: "USD",
+        balance: 1840.55,
+        equity: 1912.30,
+        profit: 812.30
+      };
+
+      const mockOrders = [
+        { ticket: 1001, symbol: "EURUSD", type: "buy", volume: 0.10, price: 1.0842, profit: 24.50, time: "2026-07-12 09:14" },
+        { ticket: 1002, symbol: "XAUUSD", type: "sell", volume: 0.05, price: 2385.10, profit: -11.20, time: "2026-07-12 07:02" },
+        { ticket: 1003, symbol: "GBPUSD", type: "buy", volume: 0.20, price: 1.2711, profit: 38.90, time: "2026-07-11 16:45" },
+        { ticket: 1004, symbol: "USDJPY", type: "sell", volume: 0.15, price: 157.22, profit: -6.40, time: "2026-07-11 12:03" },
+        { ticket: 1005, symbol: "XAUUSD", type: "buy", volume: 0.08, price: 2378.90, profit: 52.10, time: "2026-07-10 21:30" }
+      ];
+
+      const mockPositions = [
+        { symbol: "EURUSD", type: "buy", volume: 0.10, open_price: 1.0838, current_price: 1.0851, profit: 13.00 },
+        { symbol: "XAUUSD", type: "sell", volume: 0.05, open_price: 2390.40, current_price: 2385.10, profit: 26.50 }
+      ];
+
+      const mockWatchlist = [
+        { symbol: "EURUSD", bid: 1.0850, ask: 1.0852 },
+        { symbol: "GBPUSD", bid: 1.2712, ask: 1.2715 },
+        { symbol: "XAUUSD", bid: 2385.05, ask: 2385.45 },
+        { symbol: "USDJPY", bid: 157.20, ask: 157.23 }
+      ];
+
+      const mockEquityCurve = [1780, 1795, 1770, 1810, 1850, 1830, 1880, 1860, 1900, 1912];
+
+      // ----- Helpers -----
+      function fmtMoney(v) {
+        const n = Number(v) || 0;
+        return (n < 0 ? "-$" : "$") + Math.abs(n).toFixed(2);
+      }
+
+      function initials(name) {
+        return (name || "--").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+      }
+
+      function withinPeriod(timeStr, days) {
+        try {
+          const t = new Date(timeStr.replace(" ", "T"));
+          const cutoff = new Date(Date.now() - days * 24 * 3600 * 1000);
+          return t >= cutoff;
+        } catch (e) { return false; }
+      }
+
+      function computeMockTotals() {
+        return {
+          day: mockOrders.filter(o => withinPeriod(o.time, 1)),
+          week: mockOrders.filter(o => withinPeriod(o.time, 7)),
+          month: mockOrders.filter(o => withinPeriod(o.time, 30))
+        };
+      }
+
+      // ----- Clock -----
+      function tickClock() {
+        try {
+          const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+          const c1 = document.getElementById("clock");
+          const c2 = document.getElementById("clockSidebar");
+          if (c1) c1.textContent = t;
+          if (c2) c2.textContent = t;
+        } catch (e) { /* ignore */ }
+      }
+      setInterval(tickClock, 1000);
+      tickClock();
+
+      // ----- Drawer -----
+      const drawer = document.getElementById("drawer");
+      const overlay = document.getElementById("overlay");
+
+      function openDrawer() {
+        drawer.classList.add("open");
+        overlay.classList.add("open");
+      }
+
+      function closeDrawer() {
+        drawer.classList.remove("open");
+        overlay.classList.remove("open");
+      }
+
+      document.getElementById("menuBtn").addEventListener("click", openDrawer);
+      document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+      overlay.addEventListener("click", closeDrawer);
+
+      document.getElementById("reconnectLink").addEventListener("click", function (e) {
+        e.preventDefault();
+        closeDrawer();
+        forceReconnect();
+      });
+
+      document.getElementById("reconnectLinkSidebar").addEventListener("click", function (e) {
+        e.preventDefault();
+        forceReconnect();
+      });
+
+      // ----- Nav Active -----
+      document.querySelectorAll(".sidebar-nav a[data-nav], .bottom-nav a[data-nav]").forEach(link => {
+        link.addEventListener("click", function () {
+          const group = this.closest(".sidebar-nav, .bottom-nav");
+          if (group) group.querySelectorAll("a").forEach(a => a.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+
+      // ----- Target Labels -----
+      function updateTargetLabels() {
+        try {
+          document.getElementById("targetEyebrow").textContent = `Progress to ${fmtMoney(TARGET_USD)} target`;
+          document.getElementById("targetNumValue").textContent = fmtMoney(TARGET_USD);
+          document.getElementById("targetLabelValue").textContent = fmtMoney(TARGET_USD);
+        } catch (e) { /* ignore */ }
+      }
+
+      // ----- Render Account -----
+      function renderAccount(a) {
+        try {
+          document.getElementById("accId").textContent = a.account_id || "—";
+          document.getElementById("accName").textContent = a.account_name || "MT5 Account";
+          document.getElementById("accServer").textContent = a.server || "Connected";
+          document.getElementById("accCurrency").textContent = a.currency || "USD";
+          document.getElementById("accInitials").textContent = initials(a.account_name || "MT5");
+
+          const profit = a.profit || 0;
+          document.getElementById("profitNum").textContent = fmtMoney(profit);
+          updateTargetLabels();
+
+          const pct = Math.max(0, Math.min(100, (profit / TARGET_USD) * 100));
+          document.getElementById("progressPctLabel").textContent = pct.toFixed(1) + "%";
+          const circumference = 515;
+          const dash = circumference - (circumference * pct / 100);
+          const gaugeArc = document.getElementById("gaugeArc");
+          if (gaugeArc) {
+            requestAnimationFrame(() => {
+              gaugeArc.style.strokeDashoffset = dash;
+            });
+          }
+
+          const equity = a.equity || a.balance || 0;
+          document.getElementById("equityNow").textContent = fmtMoney(equity);
+          const balance = a.balance || equity;
+          const deltaPct = balance ? (((equity - balance) / balance) * 100) : 0;
+          const deltaEl = document.getElementById("equityDelta");
+          deltaEl.textContent = (deltaPct >= 0 ? "+" : "") + deltaPct.toFixed(2) + "%";
+          deltaEl.style.color = deltaPct >= 0 ? "#22C55E" : "#EF4444";
+        } catch (e) {
+          console.warn("Error rendering account:", e);
+        }
+      }
+
+      // ----- Sparkline -----
+      function renderSparkline(points) {
+        const svg = document.getElementById("sparkline");
+        if (!svg) return;
+        const w = 300,
+          h = 100,
+          pad = 6;
+        if (!points || points.length < 2) {
+          svg.innerHTML = '';
+          return;
+        }
+        try {
+          const min = Math.min(...points),
+            max = Math.max(...points);
+          const range = (max - min) || 1;
+          const stepX = (w - pad * 2) / (points.length - 1);
+          const coords = points.map((p, i) => {
+            const x = pad + i * stepX;
+            const y = h - pad - ((p - min) / range) * (h - pad * 2);
+            return [x, y];
+          });
+          const linePath = coords.map((c, i) => (i === 0 ? "M" : "L") + c[0].toFixed(1) + " " + c[1].toFixed(1)).join(" ");
+          const areaPath = linePath + ` L${coords[coords.length - 1][0].toFixed(1)} ${h} L${coords[0][0].toFixed(1)} ${h} Z`;
+          const up = points[points.length - 1] >= points[0];
+          const strokeColor = up ? "#22C55E" : "#EF4444";
+          svg.innerHTML = `
+            <defs><linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0"/>
+            </linearGradient></defs>
+            <path d="${areaPath}" fill="url(#sparkFill)" stroke="none"/>
+            <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="${coords[coords.length - 1][0]}" cy="${coords[coords.length - 1][1]}" r="4" fill="${strokeColor}" stroke="#0B0B0B" stroke-width="2"/>
+          `;
+        } catch (e) {
+          console.warn("Error rendering sparkline:", e);
+        }
+      }
+
+      // ----- Profit Totals -----
+      function renderProfitTotal(period, orders) {
+        try {
+          const label = period[0].toUpperCase() + period.slice(1);
+          const sum = orders.reduce((s, o) => s + (o.profit || 0), 0);
+          const valEl = document.getElementById("statProfit" + label);
+          valEl.textContent = fmtMoney(sum);
+          valEl.classList.remove("is-pos", "is-neg");
+          valEl.classList.toggle("is-pos", sum >= 0);
+          valEl.classList.toggle("is-neg", sum < 0);
+          document.getElementById("countProfit" + label).textContent = orders.length + (orders.length === 1 ? " trade" : " trades");
+          if (period === "day") document.getElementById("summaryClosedDay").textContent = orders.length;
+        } catch (e) { /* ignore */ }
+      }
+
+      async function loadProfitTotals() {
+        const periods = ["day", "week", "month"];
+        const mockTotals = computeMockTotals();
+        for (const period of periods) {
+          if (usingMockData) {
+            renderProfitTotal(period, mockTotals[period]);
+            continue;
+          }
+          try {
+            const res = await fetch(`${API_BASE}/api/history?period=${period}`);
+            if (!res.ok) throw new Error("bad response");
+            const data = await res.json();
+            renderProfitTotal(period, data.orders || []);
+          } catch (e) {
+            renderProfitTotal(period, mockTotals[period]);
+          }
+        }
+      }
+
+      // ----- Orders Filter/Sort -----
+      function applyFilterSort() {
+        try {
+          const q = document.getElementById("searchInput").value.trim().toLowerCase();
+          let list = allOrders.filter(o => !q || o.symbol.toLowerCase().includes(q));
+          list.sort((a, b) => {
+            if (sortKey === "time") return sortDir * a.time.localeCompare(b.time);
+            if (sortKey === "profit") return sortDir * ((a.profit || 0) - (b.profit || 0));
+            return 0;
+          });
+          lastFilteredOrders = list;
+          renderOrders(list);
+        } catch (e) {
+          console.warn("Error applying filter/sort:", e);
+        }
+      }
+
+      function renderOrders(orders) {
+        const body = document.getElementById("ordersBody");
+        body.innerHTML = "";
+        if (!orders || orders.length === 0) {
+          body.innerHTML = `<tr class="empty-row"><td colspan="7">No trades match this view.</td></tr>`;
+        } else {
+          orders.forEach((o, i) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${i + 1}</td>
+              <td>${o.symbol}</td>
+              <td><span class="side-badge ${(o.type || '').toLowerCase() === 'buy' ? 'side-buy' : 'side-sell'}">${(o.type || '').toUpperCase()}</span></td>
+              <td>${o.volume || 0}</td>
+              <td>${o.price || 0}</td>
+              <td class="${(o.profit || 0) >= 0 ? 'profit-pos' : 'profit-neg'}">${fmtMoney(o.profit || 0)}</td>
+              <td>${o.time || ''}</td>`;
+            body.appendChild(tr);
+          });
+        }
+        document.getElementById("ordersCount").textContent = orders.length + (orders.length === 1 ? " trade" : " trades");
+        const net = orders.reduce((s, o) => s + (o.profit || 0), 0);
+        const netEl = document.getElementById("ordersNet");
+        netEl.textContent = "Net: " + fmtMoney(net);
+        netEl.style.color = net >= 0 ? "#22C55E" : "#EF4444";
+      }
+
+      document.querySelectorAll("thead th[data-sort]").forEach(th => {
+        th.addEventListener("click", function () {
+          const key = this.dataset.sort;
+          if (sortKey === key) sortDir *= -1;
+          else {
+            sortKey = key;
+            sortDir = -1;
+          }
+          applyFilterSort();
+        });
+      });
+
+      document.getElementById("searchInput").addEventListener("input", applyFilterSort);
+
+      // ----- Positions -----
+      function renderPositions(positions) {
+        const body = document.getElementById("positionsBody");
+        body.innerHTML = "";
+        if (!positions || positions.length === 0) {
+          body.innerHTML = `<tr class="empty-row"><td colspan="6">No open positions.</td></tr>`;
+        } else {
+          positions.forEach(p => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${p.symbol}</td>
+              <td><span class="side-badge ${(p.type || '').toLowerCase() === 'buy' ? 'side-buy' : 'side-sell'}">${(p.type || '').toUpperCase()}</span></td>
+              <td>${p.volume || 0}</td>
+              <td>${p.open_price || 0}</td>
+              <td>${p.current_price || 0}</td>
+              <td class="${(p.profit || 0) >= 0 ? 'profit-pos' : 'profit-neg'}">${fmtMoney(p.profit || 0)}</td>`;
+            body.appendChild(tr);
+          });
+        }
+        const floating = positions.reduce((s, p) => s + (p.profit || 0), 0);
+        document.getElementById("summaryOpenCount").textContent = positions.length;
+        document.getElementById("summaryFloating").textContent = fmtMoney(floating);
+        document.getElementById("summaryFloating").style.color = floating >= 0 ? "#22C55E" : "#EF4444";
+      }
+
+      // ----- Watchlist -----
+      function renderWatchlist(symbols) {
+        const body = document.getElementById("watchBody");
+        if (!symbols || symbols.length === 0) {
+          body.innerHTML =
+            `<div style="color:var(--text-muted); font-size:0.8rem; text-align:center; padding:12px 0;">No symbols available.</div>`;
+          return;
+        }
+        body.innerHTML = symbols.map(s => `
+          <div class="watch-row">
+            <div class="watch-sym">${s.symbol}</div>
+            <div class="watch-prices">
+              <div><span class="lbl">BID</span><span class="bid">${s.bid || 0}</span></div>
+              <div><span class="lbl">ASK</span><span class="ask">${s.ask || 0}</span></div>
+            </div>
+          </div>`).join("");
+      }
+
+      // ----- Banner -----
+      function showBanner(msg, isError = true) {
+        const b = document.getElementById("statusBanner");
+        b.textContent = msg;
+        b.style.display = "block";
+        b.style.background = isError ? "var(--orange-light)" : "#DCFCE7";
+        b.style.borderColor = isError ? "var(--orange)" : "#22C55E";
+      }
+
+      function hideBanner() {
+        const b = document.getElementById("statusBanner");
+        b.style.display = "none";
+      }
+
+      function setLive(ok) {
+        const txt = ok ? "live" : "demo";
+        document.getElementById("liveLabel").textContent = txt;
+        const sl = document.getElementById("liveLabelSidebar");
+        if (sl) sl.textContent = txt;
+        document.querySelectorAll(".live-pill .ring").forEach(ring => {
+          ring.style.background = ok ? "#22C55E" : "#EF4444";
+        });
+      }
+
+      // ----- Ping a single base URL -----
+      async function pingBase(base) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(`${base}/api/status`, {
+            signal: controller.signal,
+            headers: { 'Accept': 'application/json' }
+          });
+          clearTimeout(timeoutId);
+          if (!res.ok) return false;
+          const data = await res.json();
+          return data.connected === true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      // ----- Check Connection with auto-detection -----
+      async function checkConnection() {
+        if (await pingBase(API_BASE)) return true;
+
+        for (const candidate of AUTO_CANDIDATES) {
+          if (candidate === API_BASE) continue;
+          if (await pingBase(candidate)) {
+            console.log(`✅ Auto-detected MT5 Bridge at ${candidate}`);
+            API_BASE = candidate;
+            safeSet("mt5_api_base", API_BASE);
+            const label = document.getElementById("apiBaseLabel");
+            const input = document.getElementById("settingsApiBase");
+            if (label) label.textContent = API_BASE.replace(/^https?:\/\//, "");
+            if (input) input.value = API_BASE;
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // ----- Auto Reconnect Logic -----
+      async function forceReconnect() {
+        if (isReconnecting) return;
+        isReconnecting = true;
+        reconnectAttempts = 0;
+        showBanner("🔄 Reconnecting to MT5 Bridge...", false);
+        await attemptReconnect();
+        isReconnecting = false;
+      }
+
+      async function attemptReconnect() {
+        if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+          showBanner(`❌ Failed to reconnect after ${MAX_RECONNECT_ATTEMPTS} attempts. Please check your MT5 Bridge.`);
+          usingMockData = true;
+          setLive(false);
+          loadMockData();
+          startReconnectMonitor();
+          return;
+        }
+
+        reconnectAttempts++;
+        console.log(`🔄 Reconnect attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`);
+
+        const connected = await checkConnection();
+        if (connected) {
+          console.log("✅ Reconnected successfully!");
+          usingMockData = false;
+          setLive(true);
+          hideBanner();
+          await loadAllData();
+          startAutoRefresh();
+          return;
+        }
+
+        showBanner(`🔄 Reconnecting... Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`, false);
+        await new Promise(resolve => setTimeout(resolve, RECONNECT_DELAY));
+        await attemptReconnect();
+      }
+
+      function startReconnectMonitor() {
+        if (reconnectInterval) clearInterval(reconnectInterval);
+        reconnectInterval = setInterval(async () => {
+          if (usingMockData && !isReconnecting) {
+            console.log("🔍 Checking for reconnection...");
+            const connected = await checkConnection();
+            if (connected) {
+              console.log("✅ Connection restored!");
+              forceReconnect();
+            }
+          }
+        }, 10000);
+      }
+
+      // ----- Load Mock Data -----
+      function loadMockData() {
+        renderAccount(mockAccount);
+        renderSparkline(mockEquityCurve);
+        const mockTotals = computeMockTotals();
+        allOrders = mockTotals[currentPeriod] || mockOrders;
+        applyFilterSort();
+        renderPositions(mockPositions);
+        renderWatchlist(mockWatchlist);
+        renderProfitTotal("day", mockTotals.day);
+        renderProfitTotal("week", mockTotals.week);
+        renderProfitTotal("month", mockTotals.month);
+        document.getElementById("summaryOpenCount").textContent = mockPositions.length;
+        const floating = mockPositions.reduce((s, p) => s + p.profit, 0);
+        document.getElementById("summaryFloating").textContent = fmtMoney(floating);
+        document.getElementById("summaryClosedDay").textContent = mockTotals.day.length;
+      }
+
+      // ----- Loaders -----
+      async function loadAccount() {
+        try {
+          const res = await fetch(`${API_BASE}/api/account`);
+          if (!res.ok) throw new Error("bad response");
+          const data = await res.json();
+          renderAccount(data);
+          if (data.equity) {
+            const curve = mockEquityCurve.map((v, i) => i === mockEquityCurve.length - 1 ? data.equity : v);
+            renderSparkline(curve);
+          } else {
+            renderSparkline(mockEquityCurve);
+          }
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      async function loadOrders(period) {
+        document.getElementById("ordersLabel").textContent = "Order History — " + period[0].toUpperCase() + period.slice(1);
+        try {
+          const res = await fetch(`${API_BASE}/api/history?period=${period}`);
+          if (!res.ok) throw new Error("bad response");
+          const data = await res.json();
+          allOrders = data.orders || [];
+          applyFilterSort();
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      async function loadPositions() {
+        try {
+          const res = await fetch(`${API_BASE}/api/positions`);
+          if (!res.ok) throw new Error("bad response");
+          const data = await res.json();
+          renderPositions(data.positions || []);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      async function loadWatchlist() {
+        try {
+          const res = await fetch(`${API_BASE}/api/watchlist`);
+          if (!res.ok) throw new Error("bad response");
+          const data = await res.json();
+          renderWatchlist(data.symbols || []);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      async function loadAllData() {
+        await loadAccount();
+        await loadOrders(currentPeriod);
+        await loadProfitTotals();
+        await loadPositions();
+        await loadWatchlist();
+      }
+
+      // ----- Tabs -----
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", function () {
+          document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+          this.classList.add("active");
+          currentPeriod = this.dataset.period;
+
+          if (usingMockData) {
+            const mockTotals = computeMockTotals();
+            allOrders = mockTotals[currentPeriod] || [];
+            applyFilterSort();
+            document.getElementById("ordersLabel").textContent =
+              "Order History — " + currentPeriod[0].toUpperCase() + currentPeriod.slice(1);
+          } else {
+            loadOrders(currentPeriod);
+          }
+        });
+      });
+
+      // ----- CSV Export -----
+      document.getElementById("exportCsvBtn").addEventListener("click", function () {
+        const rows = lastFilteredOrders.length ? lastFilteredOrders : allOrders;
+        if (!rows.length) return;
+        const header = ["Ticket", "Symbol", "Side", "Volume", "Price", "Profit", "Time"];
+        const escapeCsv = (val) => {
+          const s = String(val ?? "");
+          return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        };
+        const csvLines = [header.join(",")];
+        rows.forEach(o => {
+          csvLines.push([o.ticket ?? "", o.symbol, o.type, o.volume, o.price, o.profit, o.time]
+            .map(escapeCsv).join(","));
+        });
+        const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `mt5_history_${currentPeriod}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      // ----- Settings -----
+      const settingsTargetInput = document.getElementById("settingsTarget");
+      const settingsApiBaseInput = document.getElementById("settingsApiBase");
+      settingsTargetInput.value = TARGET_USD;
+      settingsApiBaseInput.value = API_BASE;
+      document.getElementById("apiBaseLabel").textContent = API_BASE.replace(/^https?:\/\//, "");
+
+      document.getElementById("settingsSave").addEventListener("click", function () {
+        const newTarget = parseFloat(settingsTargetInput.value);
+        const newApiBase = settingsApiBaseInput.value.trim().replace(/\/+$/, "");
+
+        if (!isNaN(newTarget) && newTarget > 0) {
+          TARGET_USD = newTarget;
+          safeSet("mt5_target", String(TARGET_USD));
+          updateTargetLabels();
+        }
+        if (newApiBase) {
+          API_BASE = newApiBase;
+          safeSet("mt5_api_base", API_BASE);
+          document.getElementById("apiBaseLabel").textContent = API_BASE.replace(/^https?:\/\//, "");
+        }
+
+        const saved = document.getElementById("settingsSaved");
+        saved.style.display = "block";
+        setTimeout(() => { saved.style.display = "none"; }, 2000);
+
+        forceReconnect();
+      });
+
+      // ----- Manual Refresh -----
+      async function manualRefresh(btn) {
+        btn.disabled = true;
+        const original = btn.textContent;
+        btn.textContent = original.includes("Refresh") ? "⟳ Refreshing…" : "⟳";
+        try {
+          if (!usingMockData) {
+            await fetch(`${API_BASE}/api/refresh`, { method: "POST" });
+            await loadAllData();
+          } else {
+            loadMockData();
+          }
+        } catch (e) {
+          console.warn("Refresh error:", e);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      }
+
+      document.getElementById("refreshBtn").addEventListener("click", function () {
+        manualRefresh(this);
+      });
+
+      document.getElementById("refreshBtnSidebar").addEventListener("click", function () {
+        manualRefresh(this);
+      });
+
+      // ----- Auto Refresh -----
+      let updateInterval = null;
+      let slowUpdateInterval = null;
+      window.isFetchingUpdates = false;
+
+      async function fetchRealTimeUpdate() {
+        if (usingMockData) return;
+        if (window.isFetchingUpdates) return;
+        window.isFetchingUpdates = true;
+        try {
+          const ok = await loadAccount();
+          if (!ok) {
+            handleConnectionLost();
+            return;
+          }
+          await loadPositions();
+          await loadWatchlist();
+        } catch (e) {
+          console.error("Error in real-time fetch:", e);
+        } finally {
+          window.isFetchingUpdates = false;
+        }
+      }
+
+      async function fetchSlowUpdate() {
+        if (usingMockData) return;
+        try {
+          await loadOrders(currentPeriod);
+          await loadProfitTotals();
+        } catch (e) {
+          console.error("Error in slow fetch:", e);
+        }
+      }
+
+      function startAutoRefresh() {
+        stopAutoRefresh();
+        
+        const isEnabled = (rtToggle && rtToggle.checked) || (rtToggleDrawer && rtToggleDrawer.checked);
+        if (!isEnabled) return;
+        
+        // High-frequency poll every 2 seconds
+        updateInterval = setInterval(fetchRealTimeUpdate, 2000);
+        
+        // Low-frequency poll every 10 seconds
+        slowUpdateInterval = setInterval(fetchSlowUpdate, 10000);
+      }
+
+      function stopAutoRefresh() {
+        if (updateInterval) {
+          clearInterval(updateInterval);
+          updateInterval = null;
+        }
+        if (slowUpdateInterval) {
+          clearInterval(slowUpdateInterval);
+          slowUpdateInterval = null;
+        }
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+          refreshInterval = null;
+        }
+      }
+
+      const rtToggle = document.getElementById("realtimeToggle");
+      const rtToggleDrawer = document.getElementById("realtimeToggleDrawer");
+      const rtPulse = document.getElementById("realtimePulse");
+      const rtPulseDrawer = document.getElementById("realtimePulseDrawer");
+
+      function syncToggles(checked) {
+        if (rtToggle) rtToggle.checked = checked;
+        if (rtToggleDrawer) rtToggleDrawer.checked = checked;
+        
+        if (checked) {
+          if (rtPulse) { rtPulse.classList.add("active"); rtPulse.classList.remove("inactive"); }
+          if (rtPulseDrawer) { rtPulseDrawer.classList.add("active"); rtPulseDrawer.classList.remove("inactive"); }
+          startAutoRefresh();
+        } else {
+          if (rtPulse) { rtPulse.classList.remove("active"); rtPulse.classList.add("inactive"); }
+          if (rtPulseDrawer) { rtPulseDrawer.classList.remove("active"); rtPulseDrawer.classList.add("inactive"); }
+          stopAutoRefresh();
+        }
+      }
+
+      if (rtToggle) {
+        rtToggle.addEventListener("change", (e) => syncToggles(e.target.checked));
+      }
+      if (rtToggleDrawer) {
+        rtToggleDrawer.addEventListener("change", (e) => syncToggles(e.target.checked));
+      }
+
+      function handleConnectionLost() {
+        if (usingMockData) return;
+        console.warn("⚠️ Connection lost, switching to demo data and attempting reconnect…");
+        stopAutoRefresh();
+        usingMockData = true;
+        setLive(false);
+        loadMockData();
+        showBanner("⚠️ Lost connection to MT5 Bridge. Showing demo data.");
+        startReconnectMonitor();
+        if (!isReconnecting) forceReconnect();
+      }
+
+      // ----- Init -----
+      async function init() {
+        if (isInitialized) return;
+        isInitialized = true;
+
+        updateTargetLabels();
+        const connected = await checkConnection();
+        const isEnabled = (rtToggle && rtToggle.checked) || (rtToggleDrawer && rtToggleDrawer.checked);
+
+        if (connected) {
+          usingMockData = false;
+          setLive(true);
+          hideBanner();
+          await loadAllData();
+          syncToggles(isEnabled);
+        } else {
+          usingMockData = true;
+          setLive(false);
+          loadMockData();
+          showBanner("⚠️ Could not reach MT5 Bridge. Showing demo data.");
+          startReconnectMonitor();
+          forceReconnect();
+        }
+      }
+
+      // Start the dashboard
+      document.addEventListener('DOMContentLoaded', init);
+
+      // Also try immediately if DOM is already loaded
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        init();
+      }
+
+    })();
+  </script>
+</body>
+
+</html>

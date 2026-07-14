@@ -422,17 +422,29 @@ def index():
 @app.route('/api/dashboard')
 def api_dashboard():
     """Unified single-call update pipeline for the dashboard framework"""
-    ensure_mt5_connection()
+    connected = mt5_connected
+    if not connected and dashboard_state.get("last_update"):
+        try:
+            last_up = datetime.fromisoformat(dashboard_state["last_update"])
+            connected = (datetime.now() - last_up).total_seconds() < 60
+        except Exception:
+            pass
     return jsonify({
-        'connected': mt5_connected,
-        'data': get_dashboard_data()
+        'connected': connected,
+        'data': {
+            'account': dashboard_state.get("account", {}),
+            'positions': dashboard_state.get("positions", []),
+            'history': dashboard_state.get("history", []),
+            'watchlist': dashboard_state.get("watchlist", []),
+            'statistics': dashboard_state.get("statistics", {}),
+            'timestamp': dashboard_state.get("last_update") or datetime.now().isoformat()
+        }
     })
 
 @app.route('/api/status')
 def api_status():
     if MT5_AVAILABLE:
-        connected = ensure_mt5_connection()
-        return jsonify({'connected': connected})
+        return jsonify({'connected': mt5_connected})
     else:
         # For push mode, consider connected if we have received an update within the last 60 seconds
         if dashboard_state.get("last_update"):
@@ -529,32 +541,39 @@ def api_settings():
             "mock_data_enabled": False,
             "allowed_accounts": [415868928]
         }))
+
 @app.route('/api/account')
 def api_account():
+    # Return from memory cache if available
+    data = dashboard_state.get("account")
+    if data and data.get("account_id"):
+        return jsonify(data)
+        
     if MT5_AVAILABLE and ensure_mt5_connection():
         data = get_account_info()
         if data:
             return jsonify(data)
             
-    # Fallback to push/cache data
-    data = dashboard_state.get("account")
-    if data and data.get("account_id"):
-        return jsonify(data)
-        
     return jsonify({'error': 'MT5 not connected and no cache data available'}), 503
 
 @app.route('/api/positions')
 def api_positions():
+    # Return from memory cache
+    positions = dashboard_state.get("positions", [])
+    if positions:
+        return jsonify({'positions': positions})
+        
     if MT5_AVAILABLE and ensure_mt5_connection():
         return jsonify({'positions': get_positions()})
         
-    # Fallback to push/cache data
-    positions = dashboard_state.get("positions", [])
-    return jsonify({'positions': positions})
+    return jsonify({'positions': []})
 
 @app.route('/api/history')
 def api_history():
     period = flask.request.args.get('period', 'day')
+    if period == 'day' and dashboard_state.get("history"):
+        return jsonify({'orders': dashboard_state["history"]})
+        
     if MT5_AVAILABLE and ensure_mt5_connection():
         return jsonify({'orders': get_history(period)})
         
@@ -587,18 +606,83 @@ def api_history():
 
 @app.route('/api/watchlist')
 def api_watchlist():
+    symbols = dashboard_state.get("watchlist", [])
+    if symbols:
+        return jsonify({'symbols': symbols})
+        
     if MT5_AVAILABLE and ensure_mt5_connection():
         return jsonify({'symbols': get_watchlist()})
         
-    # Fallback to push/cache data
-    symbols = dashboard_state.get("watchlist", [])
-    return jsonify({'symbols': symbols})
+    return jsonify({'symbols': []})
 
 @app.route('/api/statistics')
 def api_statistics():
+    stats = dashboard_state.get("statistics")
+    if stats:
+        return jsonify({'connected': mt5_connected, 'data': stats})
+        
     if MT5_AVAILABLE and ensure_mt5_connection():
         return jsonify({'connected': True, 'data': get_statistics()})
     return jsonify({'connected': False, 'error': 'Statistics not supported in push mode'})
+
+def background_mt5_updater():
+    global dashboard_state, mt5_connected
+    logger.info("Starting background MT5 updater daemon...")
+    
+    last_db_save_time = time.time()
+    last_state_hash = None
+    
+    while True:
+        try:
+            settings = dashboard_state.get("settings", {})
+            mock_enabled = settings.get("mock_data_enabled", False)
+            
+            if MT5_AVAILABLE and not mock_enabled:
+                connected = ensure_mt5_connection()
+                if connected:
+                    acc = get_account_info()
+                    positions = get_positions()
+                    watchlist = get_watchlist()
+                    stats = get_statistics()
+                    history = get_history('day')
+                    
+                    if acc is not None:
+                        dashboard_state["account"] = acc
+                    dashboard_state["positions"] = positions
+                    dashboard_state["watchlist"] = watchlist
+                    dashboard_state["statistics"] = stats
+                    dashboard_state["history"] = history
+                    dashboard_state["last_update"] = datetime.now().isoformat()
+                    mt5_connected = True
+                else:
+                    mt5_connected = False
+            
+            # Throttled MongoDB and Cache file saving (every 10 seconds, or if positions/balance changed)
+            current_time = time.time()
+            if current_time - last_db_save_time > 10:
+                state_sig = {
+                    "balance": dashboard_state.get("account", {}).get("balance"),
+                    "positions_count": len(dashboard_state.get("positions", [])),
+                    "watchlist_count": len(dashboard_state.get("watchlist", []))
+                }
+                state_hash = json.dumps(state_sig, sort_keys=True)
+                
+                if state_hash != last_state_hash or (current_time - last_db_save_time > 30):
+                    save_state_cache()
+                    save_state_to_mongodb()
+                    last_state_hash = state_hash
+                    
+                last_db_save_time = current_time
+                
+        except Exception as e:
+            logger.error(f"Error in background MT5 updater: {str(e)}")
+            
+        time.sleep(1.0)
+
+# Start background thread immediately on module import
+t_updater = threading.Thread(target=background_mt5_updater, daemon=True)
+t_updater.start()
+logger.info("Background MT5 updater thread started")
 
 if __name__ == '__main__':
     # Initialize connection immediately upon thread setup
