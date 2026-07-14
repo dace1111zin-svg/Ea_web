@@ -1750,28 +1750,73 @@ function getEventTradeRule(e) {
             </div>`;
   }
   
-  if (!e.forecast && !e.previous) {
+  if (!e.forecast) {
     return `<div style="font-size: 0.65rem; color: var(--muted); margin-top: 2px; font-weight: 500;">
               ⚠️ No forecast available
             </div>`;
   }
 
+  const parseVal = (str) => {
+    if (!str) return null;
+    const val = parseFloat(str.replace(/[^0-9.-]/g, ""));
+    return isNaN(val) ? null : val;
+  };
+  
+  const fc = parseVal(e.forecast);
+  const prev = parseVal(e.previous);
+  
   const isUnemployment = title.includes("unemployment") || title.includes("jobless") || title.includes("claims");
   
+  if (fc === null || prev === null) {
+    // If we can't parse or compare (no previous value), fallback to simple criteria rule
+    if (isUnemployment) {
+      return `
+        <div style="font-size: 0.65rem; display: flex; gap: 8px; margin-top: 2px; font-weight: 600;">
+          <span style="color: #1FAA59;">🟢 Act &lt; Fc = BUY ${e.country}</span>
+          <span style="color: #E1483F;">🔴 Act &gt; Fc = SELL ${e.country}</span>
+        </div>
+      `;
+    } else {
+      return `
+        <div style="font-size: 0.65rem; display: flex; gap: 8px; margin-top: 2px; font-weight: 600;">
+          <span style="color: #1FAA59;">🟢 Act &gt; Fc = BUY ${e.country}</span>
+          <span style="color: #E1483F;">🔴 Act &lt; Fc = SELL ${e.country}</span>
+        </div>
+      `;
+    }
+  }
+
+  let isPositive = fc > prev;
   if (isUnemployment) {
-    return `
-      <div style="font-size: 0.65rem; display: flex; gap: 8px; margin-top: 2px; font-weight: 600;">
-        <span style="color: #1FAA59;">🟢 Act &lt; Fc = BUY ${e.country}</span>
-        <span style="color: #E1483F;">🔴 Act &gt; Fc = SELL ${e.country}</span>
-      </div>
-    `;
+    isPositive = fc < prev; // lower unemployment is positive
+  }
+  
+  if (fc === prev) {
+    return `<div style="font-size: 0.65rem; color: var(--muted); margin-top: 2px; font-weight: 600;">
+              ⚪ NEUTRAL BIAS (Forecast = Previous)
+            </div>`;
+  }
+  
+  if (isPositive) {
+    if (isUnemployment) {
+      return `<div style="font-size: 0.65rem; color: #1FAA59; margin-top: 2px; font-weight: 700;">
+                🟢 BUY ${e.country} Bias (Expect Act &lt; Fc)
+              </div>`;
+    } else {
+      return `<div style="font-size: 0.65rem; color: #1FAA59; margin-top: 2px; font-weight: 700;">
+                🟢 BUY ${e.country} Bias (Expect Act &gt; Fc)
+              </div>`;
+    }
   } else {
-    return `
-      <div style="font-size: 0.65rem; display: flex; gap: 8px; margin-top: 2px; font-weight: 600;">
-        <span style="color: #1FAA59;">🟢 Act &gt; Fc = BUY ${e.country}</span>
-        <span style="color: #E1483F;">🔴 Act &lt; Fc = SELL ${e.country}</span>
-      </div>
-    `;
+    if (isUnemployment) {
+      return `<div style="font-size: 0.65rem; color: #E1483F; margin-top: 2px; font-weight: 700;">
+                🔴 SELL ${e.country} Bias (Expect Act &gt; Fc)
+              </div>`;
+    } else {
+      return `<div style="font-size: 0.65rem; color: #E1483F; margin-top: 2px; font-weight: 700;">
+                🔴 SELL ${e.country} Bias (Expect Act &lt; Fc)
+              </div>`;
+    }
   }
 }
 
