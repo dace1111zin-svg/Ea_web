@@ -58,7 +58,8 @@ MONGO_CONNECTED = False
 def initialize_mongodb():
     global mongo_client, db, collection, MONGO_CONNECTED
     try:
-        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsCAFile=certifi.where())
+        # Bypass TLS certificate checks to resolve SSL handshake errors on cloud platforms
+        mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsAllowInvalidCertificates=True)
         # Check connection status
         mongo_client.server_info()
         db = mongo_client["mt5_dashboard"]
