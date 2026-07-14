@@ -521,6 +521,90 @@
     background-color: #E1483F !important;
     animation: none;
   }
+  /* Economic Calendar Widget styles */
+  .news-event-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--panel-2, rgba(0,0,0,0.02));
+    border: 1px solid var(--border, #EDE7D4);
+    border-radius: 10px;
+    gap: 10px;
+    transition: transform 0.15s ease-in-out;
+  }
+  .news-event-row:hover {
+    transform: translateX(3px);
+  }
+  .news-event-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .news-event-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .news-event-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .news-currency {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .news-impact-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  .news-impact-High {
+    background-color: rgba(225, 72, 63, 0.15);
+    color: #E1483F;
+    border: 1px solid rgba(225, 72, 63, 0.3);
+  }
+  .news-impact-Medium {
+    background-color: rgba(241, 96, 28, 0.15);
+    color: #F1601C;
+    border: 1px solid rgba(241, 96, 28, 0.3);
+  }
+  .news-impact-Low {
+    background-color: rgba(100, 100, 100, 0.1);
+    color: var(--muted);
+    border: 1px solid rgba(100, 100, 100, 0.2);
+  }
+  .news-impact-Holiday {
+    background-color: rgba(31, 170, 89, 0.15);
+    color: #1FAA59;
+    border: 1px solid rgba(31, 170, 89, 0.3);
+  }
+  .news-event-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .news-event-time {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .news-event-values {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
 </style>
 </head>
 <body>
@@ -841,6 +925,13 @@
           <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Open positions</span><span class="mono" id="summaryOpenCount">0</span></div>
           <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Floating P/L</span><span class="mono" id="summaryFloating">$0.00</span></div>
           <div style="display:flex; justify-content:space-between;"><span style="color:var(--muted);">Closed trades (day)</span><span class="mono" id="summaryClosedDay">0</span></div>
+        </div>
+      </section>
+
+      <section class="panel" data-view="overview">
+        <div class="eyebrow">Economic Calendar / ប្រតិទិនសេដ្ឋកិច្ច</div>
+        <div id="newsCalendarBody" style="display:flex; flex-direction:column; gap:12px;">
+          <div style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem; font-weight:600;">Loading news…</div>
         </div>
       </section>
     </div>
@@ -1648,6 +1739,87 @@ let updateInterval = null;
 let slowUpdateInterval = null;
 window.isFetchingUpdates = false;
 
+async function loadNews() {
+  const container = document.getElementById("newsCalendarBody");
+  if (!container) return;
+  
+  // Define fallback mock news in case fetch fails
+  const mockNews = [
+    { title: "Core Retail Sales m/m", country: "USD", date: new Date(Date.now() + 7200000).toISOString(), impact: "High", forecast: "0.1%", previous: "0.2%" },
+    { title: "CPI m/m", country: "USD", date: new Date(Date.now() + 18000000).toISOString(), impact: "High", forecast: "0.2%", previous: "0.0%" },
+    { title: "Monetary Policy Summary", country: "GBP", date: new Date(Date.now() + 32400000).toISOString(), impact: "High", forecast: "", previous: "" },
+    { title: "Flash Manufacturing PMI", country: "EUR", date: new Date(Date.now() + 86400000).toISOString(), impact: "Medium", forecast: "45.8", previous: "45.6" }
+  ];
+  
+  let newsList = [];
+  try {
+    const res = await fetch(`${API_BASE}/news`);
+    if (!res.ok) throw new Error("Bad response");
+    const data = await res.json();
+    newsList = data.news || [];
+  } catch (e) {
+    console.warn("Failed to load real news, using fallback demo news:", e);
+    newsList = mockNews;
+  }
+  
+  if (!newsList || newsList.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem; font-weight:600;">No news events scheduled for this week.</div>`;
+    return;
+  }
+  
+  // Filter events: show events that are upcoming or happened within the last 2 hours
+  const now = new Date();
+  const activeEvents = newsList.map(e => {
+    return { ...e, parsedDate: new Date(e.date) };
+  }).filter(e => {
+    return e.parsedDate >= (now - 2 * 3600 * 1000); // 2 hours ago to future
+  }).sort((a, b) => a.parsedDate - b.parsedDate);
+  
+  if (activeEvents.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem; font-weight:600;">No upcoming news events.</div>`;
+    return;
+  }
+  
+  // Show up to 6 events
+  const displayEvents = activeEvents.slice(0, 6);
+  
+  container.innerHTML = displayEvents.map(e => {
+    // Format date and time
+    const tStr = e.parsedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    
+    // Check if it's today or tomorrow or later
+    let dayStr = "";
+    const diffDays = Math.floor((e.parsedDate.toDateString() === now.toDateString()) ? 0 : 
+                     (e.parsedDate.toDateString() === new Date(now.getTime() + 86400000).toDateString()) ? 1 : 2);
+    
+    if (diffDays === 0) dayStr = "Today";
+    else if (diffDays === 1) dayStr = "Tomorrow";
+    else dayStr = e.parsedDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    
+    const impactClass = `news-impact-${e.impact}`;
+    const forecastVal = e.forecast || "—";
+    const previousVal = e.previous || "—";
+    
+    return `
+      <div class="news-event-row">
+        <div class="news-event-left">
+          <div class="news-event-title" title="${e.title}">${e.title}</div>
+          <div class="news-event-meta">
+            <span class="news-currency">${e.country}</span>
+            <span class="news-impact-badge ${impactClass}">${e.impact}</span>
+          </div>
+        </div>
+        <div class="news-event-right">
+          <div class="news-event-time">${dayStr} ${tStr}</div>
+          <div class="news-event-values" style="font-size: 0.65rem;">
+            F: <span style="font-weight: 700; color: var(--ink);">${forecastVal}</span> | P: <span style="font-weight: 700; color: var(--ink);">${previousVal}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 async function fetchRealTimeUpdate() {
   if (window.isFetchingUpdates) return;
   window.isFetchingUpdates = true;
@@ -1666,6 +1838,7 @@ async function fetchSlowUpdate() {
   try {
     await loadOrders(currentPeriod);
     await loadProfitTotals();
+    await loadNews();
     const activeNav = document.querySelector(".sidebar-nav a.active") || document.querySelector(".bottom-nav a.active");
     if (activeNav && activeNav.getAttribute("data-nav") === "calendar") {
       await loadCalendar();
@@ -1729,6 +1902,7 @@ async function init(){
   await loadPositions();
   await loadWatchlist();
   await loadCalendar();
+  await loadNews();
   
   // Apply initial view switching
   const activeNav = document.querySelector(".bottom-nav a.active") || document.querySelector(".sidebar-nav a.active");

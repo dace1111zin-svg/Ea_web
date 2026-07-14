@@ -625,17 +625,54 @@ def api_statistics():
         return jsonify({'connected': True, 'data': get_statistics()})
     return jsonify({'connected': False, 'error': 'Statistics not supported in push mode'})
 
+@app.route('/api/news')
+def api_news():
+    news = dashboard_state.get("news", [])
+    return jsonify({"news": news})
+
+def fetch_forex_factory_news():
+    import urllib.request
+    import urllib.error
+    url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+    req = urllib.request.Request(
+        url, 
+        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode('utf-8'))
+                logger.info(f"Successfully fetched {len(data)} news events from Forex Factory")
+                return data
+    except urllib.error.URLError as e:
+        logger.error(f"Error fetching Forex Factory news: {str(e)}")
+    except Exception as e:
+        logger.error(f"General error in Forex Factory news fetch: {str(e)}")
+    return None
+
 def background_mt5_updater():
     global dashboard_state, mt5_connected
     logger.info("Starting background MT5 updater daemon...")
     
     last_db_save_time = time.time()
     last_state_hash = None
+    last_news_fetch_time = 0
     
     while True:
         try:
             settings = dashboard_state.get("settings", {})
             mock_enabled = settings.get("mock_data_enabled", False)
+            
+            # Fetch Forex Factory Economic Calendar news once every hour
+            current_time = time.time()
+            if current_time - last_news_fetch_time > 3600:
+                news = fetch_forex_factory_news()
+                if news is not None:
+                    dashboard_state["news"] = news
+                    last_news_fetch_time = current_time
+                else:
+                    # Rate-limit aware backoff: retry in 5 minutes (300 seconds) if failed
+                    last_news_fetch_time = current_time - 3300
             
             if MT5_AVAILABLE and not mock_enabled:
                 connected = ensure_mt5_connection()
@@ -658,7 +695,6 @@ def background_mt5_updater():
                     mt5_connected = False
             
             # Throttled MongoDB and Cache file saving (every 10 seconds, or if positions/balance changed)
-            current_time = time.time()
             if current_time - last_db_save_time > 10:
                 state_sig = {
                     "balance": dashboard_state.get("account", {}).get("balance"),
