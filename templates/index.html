@@ -813,6 +813,19 @@
   </div>
 </div>
 
+<!-- Hourly Breakdown Modal -->
+<div class="modal-overlay" id="hourlyModal">
+  <div class="modal-window">
+    <div class="modal-header">
+      <div class="modal-title" id="hourlyModalTitle">Hourly Breakdown</div>
+      <button class="modal-close" onclick="closeHourlyModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="hourlyModalBody">
+      <!-- Dynamically populated -->
+    </div>
+  </div>
+</div>
+
 <script>
 let API_BASE = localStorage.getItem("mt5_api_base") || (window.location.origin + "/api");
 let TARGET_USD = parseFloat(localStorage.getItem("mt5_target")) || 2000;
@@ -1591,18 +1604,6 @@ async function init(){
 }
 init();
 </script>
-<!-- Hourly Breakdown Modal -->
-<div class="modal-overlay" id="hourlyModal">
-  <div class="modal-window">
-    <div class="modal-header">
-      <div class="modal-title" id="hourlyModalTitle">Hourly Breakdown</div>
-      <button class="modal-close" onclick="closeHourlyModal()">&times;</button>
-    </div>
-    <div class="modal-body" id="hourlyModalBody">
-      <!-- Dynamically populated -->
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
