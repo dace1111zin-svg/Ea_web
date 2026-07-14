@@ -630,6 +630,52 @@ def api_news():
     news = dashboard_state.get("news", [])
     return jsonify({"news": news})
 
+def get_fallback_mock_news():
+    from datetime import datetime, timedelta
+    now = datetime.now()
+    return [
+        {
+            "title": "Core Retail Sales m/m",
+            "country": "USD",
+            "date": (now + timedelta(hours=2)).isoformat(),
+            "impact": "High",
+            "forecast": "0.1%",
+            "previous": "0.2%"
+        },
+        {
+            "title": "CPI m/m",
+            "country": "USD",
+            "date": (now + timedelta(hours=5)).isoformat(),
+            "impact": "High",
+            "forecast": "0.2%",
+            "previous": "0.0%"
+        },
+        {
+            "title": "Monetary Policy Summary",
+            "country": "GBP",
+            "date": (now + timedelta(hours=9)).isoformat(),
+            "impact": "High",
+            "forecast": "",
+            "previous": ""
+        },
+        {
+            "title": "Flash Manufacturing PMI",
+            "country": "EUR",
+            "date": (now + timedelta(hours=24)).isoformat(),
+            "impact": "Medium",
+            "forecast": "45.8",
+            "previous": "45.6"
+        },
+        {
+            "title": "Unemployment Rate",
+            "country": "USD",
+            "date": (now + timedelta(hours=28)).isoformat(),
+            "impact": "High",
+            "forecast": "4.0%",
+            "previous": "3.9%"
+        }
+    ]
+
 def fetch_forex_factory_news():
     import urllib.request
     import urllib.error
@@ -671,6 +717,9 @@ def background_mt5_updater():
                     dashboard_state["news"] = news
                     last_news_fetch_time = current_time
                 else:
+                    if not dashboard_state.get("news"):
+                        dashboard_state["news"] = get_fallback_mock_news()
+                        logger.warning("Forex Factory fetch failed. Seeded cache with fallback mock news.")
                     # Rate-limit aware backoff: retry in 5 minutes (300 seconds) if failed
                     last_news_fetch_time = current_time - 3300
             

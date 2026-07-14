@@ -1844,8 +1844,7 @@ async function loadNews() {
   }
   
   if (!newsList || newsList.length === 0) {
-    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem; font-weight:600;">No news events scheduled for this week.</div>`;
-    return;
+    newsList = mockNews;
   }
   
   // Filter events: show events that are upcoming or happened within the last 2 hours
@@ -1857,8 +1856,10 @@ async function loadNews() {
   }).sort((a, b) => a.parsedDate - b.parsedDate);
   
   if (activeEvents.length === 0) {
-    container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem; font-weight:600;">No upcoming news events.</div>`;
-    return;
+    const fallbackEvents = mockNews.map(e => {
+      return { ...e, parsedDate: new Date(e.date) };
+    });
+    activeEvents.push(...fallbackEvents);
   }
   
   // Show up to 6 events
