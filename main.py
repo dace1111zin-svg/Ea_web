@@ -1,11 +1,16 @@
+"""
+MT5 Dashboard Server - Flask Backend
+ប្រព័ន្ធគ្រប់គ្រងទិន្នន័យ MT5 សម្រាប់ Web Dashboard
+គណនាប្រាក់ចំណេញចាប់ពីម៉ោង 12:00 យប់ (00:00) ដល់ 11:59 យប់ (23:59)
+"""
+
 try:
     import MetaTrader5 as mt5
     MT5_AVAILABLE = True
 except ImportError:
     MT5_AVAILABLE = False
 
-import flask
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 import logging
 import sys
@@ -17,6 +22,14 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 import pymongo
 import certifi
+import urllib.request
+import urllib.error
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+VERSION = "2.0"
+APP_NAME = "MT5 Dashboard Server"
 
 # Configure logging
 logging.basicConfig(
@@ -25,6 +38,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ============================================================
+# FLASK APP INITIALIZATION
+# ============================================================
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -35,11 +51,15 @@ connection_lock = threading.Lock()
 
 CACHE_FILE = "state_cache.json"
 
+# ============================================================
+# DASHBOARD STATE
+# ============================================================
 dashboard_state = {
     "account": {},
     "positions": [],
     "history": [],
     "watchlist": [],
+    "news": [],
     "last_update": None,
     "settings": {
         "target_usd": 2000.0,
@@ -48,32 +68,35 @@ dashboard_state = {
     }
 }
 
-# MongoDB Settings
+# ============================================================
+# MONGODB SETTINGS
+# ============================================================
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://sainicc01_db_user:AYTi3F5m8rR0uLJT@cluster0.wv9gglp.mongodb.net/?appName=Cluster0")
 mongo_client = None
 db = None
 collection = None
 MONGO_CONNECTED = False
 
+# ============================================================
+# MONGODB FUNCTIONS
+# ============================================================
 def initialize_mongodb():
+    """Initialize MongoDB connection"""
     global mongo_client, db, collection, MONGO_CONNECTED
     try:
-        # Bypass TLS certificate checks to resolve SSL handshake errors on cloud platforms
         mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000, tlsAllowInvalidCertificates=True)
-        # Check connection status
         mongo_client.server_info()
         db = mongo_client["mt5_dashboard"]
         collection = db["dashboard_state"]
         MONGO_CONNECTED = True
         logger.info("Connected to MongoDB Atlas successfully")
-        
-        # Load initial state from MongoDB
         load_state_from_mongodb()
     except Exception as e:
         MONGO_CONNECTED = False
         logger.error(f"Failed to connect to MongoDB: {str(e)}")
 
 def load_state_from_mongodb():
+    """Load dashboard state from MongoDB"""
     global dashboard_state
     if not MONGO_CONNECTED:
         return
@@ -83,7 +106,7 @@ def load_state_from_mongodb():
             state.pop("_id", None)
             dashboard_state.update(state)
             
-            # Ensure settings exist with default fallbacks for legacy DB records
+            # Ensure settings exist with default fallbacks
             if "settings" not in dashboard_state or not isinstance(dashboard_state["settings"], dict):
                 dashboard_state["settings"] = {}
             defaults = {
@@ -101,6 +124,7 @@ def load_state_from_mongodb():
         logger.error(f"Error loading state from MongoDB: {str(e)}")
 
 def save_state_to_mongodb():
+    """Save dashboard state to MongoDB"""
     if not MONGO_CONNECTED:
         return
     try:
@@ -111,7 +135,11 @@ def save_state_to_mongodb():
     except Exception as e:
         logger.error(f"Error saving state to MongoDB: {str(e)}")
 
+# ============================================================
+# CACHE FUNCTIONS
+# ============================================================
 def load_state_cache():
+    """Load dashboard state from local cache file"""
     global dashboard_state
     if os.path.exists(CACHE_FILE):
         try:
@@ -123,6 +151,7 @@ def load_state_cache():
             logger.error(f"Error loading state cache: {str(e)}")
 
 def save_state_cache():
+    """Save dashboard state to local cache file"""
     try:
         with open(CACHE_FILE, 'w', encoding='utf-8') as f:
             json.dump(dashboard_state, f, indent=4)
@@ -135,9 +164,14 @@ load_state_cache()
 # Initialize MongoDB connection
 initialize_mongodb()
 
-# Symbols to watch - Updated with 'm' suffix for Exness
+# ============================================================
+# MT5 SYMBOLS WATCHLIST
+# ============================================================
 WATCHLIST_SYMBOLS = ["EURUSDm", "GBPUSDm", "USDJPYm", "XAUUSDm", "BTCUSDm"]
 
+# ============================================================
+# MT5 CONNECTION FUNCTIONS
+# ============================================================
 def initialize_mt5():
     """Initialize MT5 connection with proper error handling"""
     global mt5_connected
@@ -203,6 +237,9 @@ def ensure_mt5_connection():
             
         return mt5_connected
 
+# ============================================================
+# MT5 DATA FUNCTIONS
+# ============================================================
 def get_account_info():
     """Get account information from MT5"""
     if not ensure_mt5_connection():
@@ -263,22 +300,28 @@ def get_positions():
         return []
 
 def get_history(period='day'):
-    """Get recent closed orders history from MT5 for the specified period"""
+    """
+    Get recent closed orders history from MT5 for the specified period
+    គណនាប្រវត្តិចាប់ពីម៉ោង 12:00 យប់ (00:00)
+    """
     if not ensure_mt5_connection():
         return []
         
     try:
         now = datetime.now()
         if period == 'day':
-            from_date = datetime(now.year, now.month, now.day)
+            from_date = datetime(now.year, now.month, now.day)  # 12:00 យប់ (00:00)
         elif period == 'week':
             from_date = now - timedelta(days=7)
+            from_date = datetime(from_date.year, from_date.month, from_date.day)  # 12:00 យប់
         elif period == 'month':
             from_date = now - timedelta(days=30)
+            from_date = datetime(from_date.year, from_date.month, from_date.day)  # 12:00 យប់
         elif period == 'current_month':
-            from_date = datetime(now.year, now.month, 1)
+            from_date = datetime(now.year, now.month, 1)  # ដើមខែ ម៉ោង 00:00
         else:
             from_date = now - timedelta(days=1)
+            from_date = datetime(from_date.year, from_date.month, from_date.day)  # 12:00 យប់
             
         history = mt5.history_deals_get(from_date, now)
         if history is None:
@@ -287,7 +330,7 @@ def get_history(period='day'):
             
         result = []
         for deal in history:
-            # Filter only actual trades with volume > 0 and valid symbols. Type 0 is BUY, Type 1 is SELL
+            # Filter only actual trades with volume > 0 and valid symbols
             if deal.type in [0, 1] and deal.volume > 0 and deal.symbol:
                 deal_time = datetime.fromtimestamp(deal.time).strftime('%Y-%m-%d %H:%M')
                 result.append({
@@ -363,7 +406,7 @@ def get_statistics():
     """Get trading statistics"""
     try:
         account = get_account_info()
-        history = get_history()
+        history = get_history('day')
         
         if not account:
             return {}
@@ -401,237 +444,17 @@ def get_dashboard_data():
     return {
         'account': get_account_info(),
         'positions': get_positions(),
-        'history': get_history(),
+        'history': get_history('day'),
         'watchlist': get_watchlist(),
         'statistics': get_statistics(),
         'timestamp': datetime.now().isoformat()
     }
 
 # ============================================================
-# FLASK WEB SERVER ROUTING
+# NEWS FUNCTIONS
 # ============================================================
-
-@app.route('/')
-def index():
-    """Serves the premium responsive frontend dashboard"""
-    try:
-        return render_template('index.html')
-    except Exception as e:
-        logger.error(f"Template rendering exception: {str(e)}")
-        return "index.html template file missing from the /templates directory.", 404
-
-@app.route('/api/dashboard')
-def api_dashboard():
-    """Unified single-call update pipeline for the dashboard framework"""
-    connected = mt5_connected
-    if not connected and dashboard_state.get("last_update"):
-        try:
-            last_up = datetime.fromisoformat(dashboard_state["last_update"])
-            connected = (datetime.now() - last_up).total_seconds() < 60
-        except Exception:
-            pass
-    return jsonify({
-        'connected': connected,
-        'data': {
-            'account': dashboard_state.get("account", {}),
-            'positions': dashboard_state.get("positions", []),
-            'history': dashboard_state.get("history", []),
-            'watchlist': dashboard_state.get("watchlist", []),
-            'statistics': dashboard_state.get("statistics", {}),
-            'timestamp': dashboard_state.get("last_update") or datetime.now().isoformat()
-        }
-    })
-
-@app.route('/api/status')
-def api_status():
-    if MT5_AVAILABLE:
-        return jsonify({'connected': mt5_connected})
-    else:
-        # For push mode, consider connected if we have received an update within the last 60 seconds
-        if dashboard_state.get("last_update"):
-            try:
-                last_up = datetime.fromisoformat(dashboard_state["last_update"])
-                is_active = (datetime.now() - last_up).total_seconds() < 60
-                return jsonify({'connected': is_active})
-            except Exception:
-                pass
-        return jsonify({'connected': False})
-
-@app.route('/api/update', methods=['POST'])
-def api_update():
-    global dashboard_state
-    try:
-        data = flask.request.get_json(force=True)
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
-            
-        dashboard_state["account"] = data.get("account", {})
-        dashboard_state["positions"] = data.get("positions", [])
-        
-        # Merge history deals based on ticket ID to persist all trades
-        existing_history = dashboard_state.get("history", [])
-        if not isinstance(existing_history, list):
-            existing_history = []
-        existing_by_ticket = {str(d.get("ticket")): d for d in existing_history if d and d.get("ticket")}
-        
-        new_deals = data.get("history", [])
-        if isinstance(new_deals, list):
-            for deal in new_deals:
-                if deal and deal.get("ticket"):
-                    t_id = str(deal.get("ticket"))
-                    existing_by_ticket[t_id] = deal
-            
-        dashboard_state["history"] = sorted(existing_by_ticket.values(), key=lambda x: x.get("time", ""), reverse=True)
-        
-        dashboard_state["watchlist"] = data.get("watchlist", [])
-        dashboard_state["last_update"] = datetime.now().isoformat()
-        
-        save_state_cache()
-        save_state_to_mongodb()
-        
-        logger.info(f"Dashboard state updated from EA (Account ID: {dashboard_state['account'].get('account_id')})")
-        return jsonify({"success": True})
-    except Exception as e:
-        logger.error(f"Error in api_update: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "nhoy")
-
-@app.route('/api/admin/login', methods=['POST'])
-def api_admin_login():
-    try:
-        data = flask.request.get_json(force=True)
-        password = data.get("password")
-        if password == ADMIN_PASSWORD:
-            return jsonify({"success": True})
-        return jsonify({"error": "Incorrect password"}), 401
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/settings', methods=['GET', 'POST'])
-def api_settings():
-    global dashboard_state
-    if flask.request.method == 'POST':
-        try:
-            # Check basic password header or payload security
-            password = flask.request.headers.get("X-Admin-Password")
-            if password != ADMIN_PASSWORD:
-                data = flask.request.get_json(force=True)
-                password = data.get("password")
-                if password != ADMIN_PASSWORD:
-                    return jsonify({"error": "Unauthorized"}), 401
-            else:
-                data = flask.request.get_json(force=True)
-            
-            settings = data.get("settings", {})
-            if "target_usd" in settings:
-                dashboard_state["settings"]["target_usd"] = float(settings["target_usd"])
-            if "mock_data_enabled" in settings:
-                dashboard_state["settings"]["mock_data_enabled"] = bool(settings["mock_data_enabled"])
-            if "allowed_accounts" in settings:
-                dashboard_state["settings"]["allowed_accounts"] = [int(x) for x in settings["allowed_accounts"]]
-            
-            save_state_cache()
-            save_state_to_mongodb()
-            return jsonify({"success": True, "settings": dashboard_state["settings"]})
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-    else:
-        # GET method
-        return jsonify(dashboard_state.get("settings", {
-            "target_usd": 2000.0,
-            "mock_data_enabled": False,
-            "allowed_accounts": [415868928]
-        }))
-
-@app.route('/api/account')
-def api_account():
-    # Return from memory cache if available
-    data = dashboard_state.get("account")
-    if data and data.get("account_id"):
-        return jsonify(data)
-        
-    if MT5_AVAILABLE and ensure_mt5_connection():
-        data = get_account_info()
-        if data:
-            return jsonify(data)
-            
-    return jsonify({'error': 'MT5 not connected and no cache data available'}), 503
-
-@app.route('/api/positions')
-def api_positions():
-    # Return from memory cache
-    positions = dashboard_state.get("positions", [])
-    if positions:
-        return jsonify({'positions': positions})
-        
-    if MT5_AVAILABLE and ensure_mt5_connection():
-        return jsonify({'positions': get_positions()})
-        
-    return jsonify({'positions': []})
-
-@app.route('/api/history')
-def api_history():
-    period = flask.request.args.get('period', 'day')
-    if period == 'day' and dashboard_state.get("history"):
-        return jsonify({'orders': dashboard_state["history"]})
-        
-    if MT5_AVAILABLE and ensure_mt5_connection():
-        return jsonify({'orders': get_history(period)})
-        
-    # Fallback to push/cache data
-    orders = dashboard_state.get("history", [])
-    
-    # Filter by period
-    now = datetime.now()
-    if period == 'day':
-        cutoff = datetime(now.year, now.month, now.day)
-    elif period == 'week':
-        cutoff = now - timedelta(days=7)
-    elif period == 'month':
-        cutoff = now - timedelta(days=30)
-    elif period == 'current_month':
-        cutoff = datetime(now.year, now.month, 1)
-    else:
-        cutoff = now - timedelta(days=1)
-        
-    filtered = []
-    for o in orders:
-        try:
-            o_time = datetime.strptime(o['time'], '%Y-%m-%d %H:%M')
-            if o_time >= cutoff:
-                filtered.append(o)
-        except Exception:
-            filtered.append(o)
-            
-    return jsonify({'orders': filtered})
-
-@app.route('/api/watchlist')
-def api_watchlist():
-    symbols = dashboard_state.get("watchlist", [])
-    if symbols:
-        return jsonify({'symbols': symbols})
-        
-    if MT5_AVAILABLE and ensure_mt5_connection():
-        return jsonify({'symbols': get_watchlist()})
-        
-    return jsonify({'symbols': []})
-
-@app.route('/api/statistics')
-def api_statistics():
-    stats = dashboard_state.get("statistics")
-    if stats:
-        return jsonify({'connected': mt5_connected, 'data': stats})
-        
-    if MT5_AVAILABLE and ensure_mt5_connection():
-        return jsonify({'connected': True, 'data': get_statistics()})
-    return jsonify({'connected': False, 'error': 'Statistics not supported in push mode'})
-
-@app.route('/api/news')
-def api_news():
-    news = dashboard_state.get("news", [])
-    return jsonify({"news": news})
-
 def get_fallback_mock_news():
+    """Generate mock news data for fallback"""
     from datetime import datetime, timedelta
     now = datetime.now()
     return [
@@ -678,8 +501,7 @@ def get_fallback_mock_news():
     ]
 
 def fetch_forex_factory_news():
-    import urllib.request
-    import urllib.error
+    """Fetch economic calendar news from Forex Factory"""
     url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
     req = urllib.request.Request(
         url, 
@@ -697,7 +519,265 @@ def fetch_forex_factory_news():
         logger.error(f"General error in Forex Factory news fetch: {str(e)}")
     return None
 
+# ============================================================
+# ADMIN PASSWORD
+# ============================================================
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "nhoy")
+
+# ============================================================
+# FLASK ROUTES
+# ============================================================
+
+@app.route('/')
+def index():
+    """Serve the dashboard HTML"""
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Template rendering exception: {str(e)}")
+        return "index.html template file missing from the /templates directory.", 404
+
+# ============================================================
+# API ROUTES
+# ============================================================
+
+@app.route('/api/dashboard')
+def api_dashboard():
+    """Unified single-call update pipeline for the dashboard framework"""
+    connected = mt5_connected
+    if not connected and dashboard_state.get("last_update"):
+        try:
+            last_up = datetime.fromisoformat(dashboard_state["last_update"])
+            connected = (datetime.now() - last_up).total_seconds() < 60
+        except Exception:
+            pass
+    return jsonify({
+        'connected': connected,
+        'data': {
+            'account': dashboard_state.get("account", {}),
+            'positions': dashboard_state.get("positions", []),
+            'history': dashboard_state.get("history", []),
+            'watchlist': dashboard_state.get("watchlist", []),
+            'statistics': dashboard_state.get("statistics", {}),
+            'timestamp': dashboard_state.get("last_update") or datetime.now().isoformat()
+        }
+    })
+
+@app.route('/api/status')
+def api_status():
+    """Get MT5 connection status"""
+    if MT5_AVAILABLE:
+        return jsonify({'connected': mt5_connected})
+    else:
+        # For push mode, consider connected if we have received an update within the last 60 seconds
+        if dashboard_state.get("last_update"):
+            try:
+                last_up = datetime.fromisoformat(dashboard_state["last_update"])
+                is_active = (datetime.now() - last_up).total_seconds() < 60
+                return jsonify({'connected': is_active})
+            except Exception:
+                pass
+        return jsonify({'connected': False})
+
+@app.route('/api/update', methods=['POST'])
+def api_update():
+    """
+    Update dashboard state from MT5 EA
+    This endpoint receives data from the EA via WebRequest
+    """
+    global dashboard_state
+    try:
+        data = request.get_json(force=True)
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+            
+        dashboard_state["account"] = data.get("account", {})
+        dashboard_state["positions"] = data.get("positions", [])
+        
+        # Merge history deals based on ticket ID to persist all trades
+        existing_history = dashboard_state.get("history", [])
+        if not isinstance(existing_history, list):
+            existing_history = []
+        existing_by_ticket = {str(d.get("ticket")): d for d in existing_history if d and d.get("ticket")}
+        
+        new_deals = data.get("history", [])
+        if isinstance(new_deals, list):
+            for deal in new_deals:
+                if deal and deal.get("ticket"):
+                    t_id = str(deal.get("ticket"))
+                    existing_by_ticket[t_id] = deal
+            
+        dashboard_state["history"] = sorted(existing_by_ticket.values(), key=lambda x: x.get("time", ""), reverse=True)
+        
+        dashboard_state["watchlist"] = data.get("watchlist", [])
+        dashboard_state["last_update"] = datetime.now().isoformat()
+        
+        save_state_cache()
+        save_state_to_mongodb()
+        
+        logger.info(f"Dashboard state updated from EA (Account ID: {dashboard_state['account'].get('account_id')})")
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Error in api_update: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/admin/login', methods=['POST'])
+def api_admin_login():
+    """Admin login endpoint"""
+    try:
+        data = request.get_json(force=True)
+        password = data.get("password")
+        if password == ADMIN_PASSWORD:
+            return jsonify({"success": True})
+        return jsonify({"error": "Incorrect password"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/settings', methods=['GET', 'POST'])
+def api_settings():
+    """Get or update dashboard settings"""
+    global dashboard_state
+    if request.method == 'POST':
+        try:
+            # Check basic password header or payload security
+            password = request.headers.get("X-Admin-Password")
+            if password != ADMIN_PASSWORD:
+                data = request.get_json(force=True)
+                password = data.get("password")
+                if password != ADMIN_PASSWORD:
+                    return jsonify({"error": "Unauthorized"}), 401
+            else:
+                data = request.get_json(force=True)
+            
+            settings = data.get("settings", {})
+            if "target_usd" in settings:
+                dashboard_state["settings"]["target_usd"] = float(settings["target_usd"])
+            if "mock_data_enabled" in settings:
+                dashboard_state["settings"]["mock_data_enabled"] = bool(settings["mock_data_enabled"])
+            if "allowed_accounts" in settings:
+                dashboard_state["settings"]["allowed_accounts"] = [int(x) for x in settings["allowed_accounts"]]
+            
+            save_state_cache()
+            save_state_to_mongodb()
+            return jsonify({"success": True, "settings": dashboard_state["settings"]})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    else:
+        # GET method
+        return jsonify(dashboard_state.get("settings", {
+            "target_usd": 2000.0,
+            "mock_data_enabled": False,
+            "allowed_accounts": [415868928]
+        }))
+
+@app.route('/api/account')
+def api_account():
+    """Get account information"""
+    # Return from memory cache if available
+    data = dashboard_state.get("account")
+    if data and data.get("account_id"):
+        return jsonify(data)
+        
+    if MT5_AVAILABLE and ensure_mt5_connection():
+        data = get_account_info()
+        if data:
+            return jsonify(data)
+            
+    return jsonify({'error': 'MT5 not connected and no cache data available'}), 503
+
+@app.route('/api/positions')
+def api_positions():
+    """Get open positions"""
+    # Return from memory cache
+    positions = dashboard_state.get("positions", [])
+    if positions:
+        return jsonify({'positions': positions})
+        
+    if MT5_AVAILABLE and ensure_mt5_connection():
+        return jsonify({'positions': get_positions()})
+        
+    return jsonify({'positions': []})
+
+@app.route('/api/history')
+def api_history():
+    """
+    Get order history with period filtering
+    គណនាប្រវត្តិចាប់ពីម៉ោង 12:00 យប់ (00:00)
+    """
+    period = request.args.get('period', 'day')
+    
+    # ============================================================
+    # កែប្រែការគណនាប្រវត្តិដើម្បីរាប់ពីម៉ោង 12 យប់ (00:00)
+    # ============================================================
+    now = datetime.now()
+    if period == 'day':
+        cutoff = datetime(now.year, now.month, now.day, 0, 0, 0)  # 12:00 យប់ (00:00)
+    elif period == 'week':
+        cutoff = now - timedelta(days=7)
+        cutoff = datetime(cutoff.year, cutoff.month, cutoff.day, 0, 0, 0)
+    elif period == 'month':
+        cutoff = now - timedelta(days=30)
+        cutoff = datetime(cutoff.year, cutoff.month, cutoff.day, 0, 0, 0)
+    elif period == 'current_month':
+        cutoff = datetime(now.year, now.month, 1, 0, 0, 0)  # ដើមខែ ម៉ោង 00:00
+    else:
+        cutoff = now - timedelta(days=1)
+        cutoff = datetime(cutoff.year, cutoff.month, cutoff.day, 0, 0, 0)
+    
+    if MT5_AVAILABLE and ensure_mt5_connection():
+        return jsonify({'orders': get_history(period)})
+        
+    # Fallback to push/cache data
+    orders = dashboard_state.get("history", [])
+        
+    filtered = []
+    for o in orders:
+        try:
+            o_time = datetime.strptime(o['time'], '%Y-%m-%d %H:%M')
+            if o_time >= cutoff:
+                filtered.append(o)
+        except Exception:
+            filtered.append(o)
+            
+    return jsonify({'orders': filtered})
+
+@app.route('/api/watchlist')
+def api_watchlist():
+    """Get watchlist data"""
+    symbols = dashboard_state.get("watchlist", [])
+    if symbols:
+        return jsonify({'symbols': symbols})
+        
+    if MT5_AVAILABLE and ensure_mt5_connection():
+        return jsonify({'symbols': get_watchlist()})
+        
+    return jsonify({'symbols': []})
+
+@app.route('/api/statistics')
+def api_statistics():
+    """Get trading statistics"""
+    stats = dashboard_state.get("statistics")
+    if stats:
+        return jsonify({'connected': mt5_connected, 'data': stats})
+        
+    if MT5_AVAILABLE and ensure_mt5_connection():
+        return jsonify({'connected': True, 'data': get_statistics()})
+    return jsonify({'connected': False, 'error': 'Statistics not supported in push mode'})
+
+@app.route('/api/news')
+def api_news():
+    """Get economic calendar news"""
+    news = dashboard_state.get("news", [])
+    return jsonify({"news": news})
+
+# ============================================================
+# BACKGROUND THREAD
+# ============================================================
 def background_mt5_updater():
+    """
+    Background thread that periodically updates MT5 data
+    and syncs with MongoDB
+    """
     global dashboard_state, mt5_connected
     logger.info("Starting background MT5 updater daemon...")
     
@@ -765,11 +845,16 @@ def background_mt5_updater():
             
         time.sleep(1.0)
 
-# Start background thread immediately on module import
+# ============================================================
+# START BACKGROUND THREAD
+# ============================================================
 t_updater = threading.Thread(target=background_mt5_updater, daemon=True)
 t_updater.start()
 logger.info("Background MT5 updater thread started")
 
+# ============================================================
+# MAIN ENTRY POINT
+# ============================================================
 if __name__ == '__main__':
     # Initialize connection immediately upon thread setup
     initialize_mt5()
